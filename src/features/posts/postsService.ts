@@ -1,11 +1,21 @@
 import { BlogDBModel } from "../blog/blogModels"
 import { blogsRepository } from "../blog/blogsRepository"
-import { PostDBModel, PostInputModel, PostViewModel } from "./postModels"
+import { PostDBModel, PostInputModel, PostSearchParams, PostViewModel } from "./postModels"
 import { postsRepository } from "./postsRepository"
+import { Paginator } from "../../types"
 
 export const postsService = {
-    getAllPosts: async (): Promise<PostViewModel[]> => {
-        return await postsRepository.getAllPosts()
+    getPosts: async (queryParams: PostSearchParams): Promise<Paginator<PostViewModel>> => {
+        const foundPosts = await postsRepository.getPosts(queryParams)
+        const totalCount = await postsRepository.getPostsCount()
+
+        return {
+            pagesCount: Math.ceil(totalCount / queryParams.pageSize),
+            page: queryParams.pageNumber,
+            pageSize: queryParams.pageSize,
+            totalCount,
+            items: foundPosts,
+        }
     },
     getPostById: async (id: string): Promise<PostViewModel | null> => {
         return await postsRepository.getPostById(id)

@@ -10,7 +10,7 @@ function removeObjectId(blog: WithId<BlogDBModel>): BlogViewModel {
 }
 
 export const blogsRepository = {
-    getAllBlogs: async (queryParams: BlogSearchParams): Promise<BlogViewModel[]> => {
+    getBlogs: async (queryParams: BlogSearchParams): Promise<BlogViewModel[]> => {
 
         const filter: Record<string, unknown> = {}
         if (queryParams.searchNameTerm) {
@@ -24,6 +24,9 @@ export const blogsRepository = {
             .limit(queryParams.pageSize)
             .toArray()
         return foundBlogs.map(removeObjectId)
+    },
+    getBlogsCount: async (): Promise<number> => {
+        return await blogsCollection.countDocuments()
     },
     getBlogById: async (id: string): Promise<BlogViewModel | null> => {
         const _id = new ObjectId(id)

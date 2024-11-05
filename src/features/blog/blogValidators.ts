@@ -1,4 +1,7 @@
-import { body } from "express-validator"
+import { body, param, validationResult } from "express-validator"
+import { blogsService } from "./blogsService"
+import { NextFunction, Request, Response } from "express"
+import { HttpStatusCodes } from "../../lib/httpStatusCodes"
 
 export const nameValidator = body("name")
     .isString()
@@ -20,5 +23,19 @@ export const urlValidator = body("websiteUrl")
     .withMessage("Max allowed length of url is 100 characters")
     .isURL({ protocols: [ "https" ], require_protocol: true })
     .withMessage("Incorrect url")
+
+export const blogIdValidator = param("blogId").custom(async (blogId) => {
+    const blog = await blogsService.getBlogById(blogId)
+    return !!blog
+})
+
+export const handleNotFoundError = (req: Request, res: Response, next: NextFunction) => {
+    const errors = validationResult(req).array({ onlyFirstError: true })
+    if (errors.length > 0) {
+        res.sendStatus(HttpStatusCodes.NotFound)
+        return
+    }
+    next()
+}
 
 export const blogValidators = [ nameValidator, descriptionValidator, urlValidator ]
