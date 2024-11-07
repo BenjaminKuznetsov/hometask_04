@@ -22,7 +22,7 @@ export const seedDb = async (collections: DB_Collections[] = [ "blogs", "posts" 
                     shortDescription: it.shortDescription,
                     content: it.content,
                     blogId: it.blogId,
-                    blogName: blog?.name || "", // TODO: Почему блог не находится ??
+                    blogName: blog?.name || "",
                 }
                 return newPost
             } catch (error) {
