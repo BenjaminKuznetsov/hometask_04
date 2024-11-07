@@ -26,10 +26,6 @@ export const exampleBlogDocument = {
 
 export type BlogSearchParams = {
     searchNameTerm?: string | null
-    sortBy: keyof BlogViewModel
-    sortDirection: "asc" | "desc"
-    pageNumber: number
-    pageSize: number
 }
 
 export type BlogInputModel = {

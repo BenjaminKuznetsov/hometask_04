@@ -1,19 +1,27 @@
 import express, { Request, Response } from "express"
-import { examplePostDocument, PostInputModel, PostSearchParams, PostViewModel } from "./postModels"
-import { postsService } from "./postsService"
-import { Paginator, RequestWithBody, RequestWithParams, RequestWithParamsAndBody } from "../../types"
+import { examplePostDocument, PostInputModel, PostViewModel } from "./postModels"
+import { BlogNotFoundError, postsService } from "./postsService"
+import {
+    ApiErrorType,
+    Paginator,
+    PagingParams,
+    RequestWithBody,
+    RequestWithParams,
+    RequestWithParamsAndBody,
+} from "../../types"
 import { authMiddleware } from "../../middleware/auth"
 import { postValidators } from "./postValidators"
 import { HttpStatusCodes } from "../../lib/httpStatusCodes"
 import { handleErrorsMiddleware } from "../../middleware/handleErrors"
-import { isKeyOf } from "../../lib/helpers"
+import { formatErrors, isKeyOf } from "../../lib/helpers"
+import { postsQueryRepo } from "./postsQueryRepo"
 
 export const postsRouter = express.Router()
 
 const postsController = {
     async getPosts(req: Request, res: Response<Paginator<PostViewModel>>) {
 
-        const queryParams: PostSearchParams = {
+        const pagingParams: PagingParams<PostViewModel> = {
             sortBy: isKeyOf(req.params.sortBy, examplePostDocument)
                 ? req.params.sortBy
                 : "createdAt",
@@ -22,29 +30,59 @@ const postsController = {
             pageSize: Number(req.params.pageSize) || 10,
         }
 
-        const result = await postsService.getPosts(queryParams)
+        const result = await postsQueryRepo.getPostsWithPagingAndFilter({}, pagingParams)
         res.status(HttpStatusCodes.OK).json(result)
     },
 
     async getPostById(req: RequestWithParams<{ id: string }>, res: Response<PostViewModel>) {
-        const foundPost = await postsService.getPostById(req.params.id)
+        const foundPost = await postsQueryRepo.getPostById(req.params.id)
         if (!foundPost) {
             res.sendStatus(HttpStatusCodes.NotFound)
         } else {
             res.status(HttpStatusCodes.OK).json(foundPost)
         }
     },
-    async createPost(req: RequestWithBody<PostInputModel>, res: Response<PostViewModel>) {
-        const createdPost = await postsService.createPost(req.body)
-        res.status(HttpStatusCodes.Created).json(createdPost)
-    },
-    async updatePost(req: RequestWithParamsAndBody<{ id: string }, PostInputModel>, res: Response<PostViewModel>) {
-        const updatedPost = await postsService.updatePost(req.params.id, req.body)
-        if (!updatedPost) {
-            res.sendStatus(HttpStatusCodes.NotFound)
-            return
+    async createPost(req: RequestWithBody<PostInputModel>, res: Response<PostViewModel | ApiErrorType>) {
+
+        try {
+            const createdPost = await postsService.createPost(req.body)
+            res.status(HttpStatusCodes.Created).json(createdPost)
+        } catch (e: any) {
+            if (e instanceof BlogNotFoundError) {
+                res.status(HttpStatusCodes.BadRequest).json({
+                    errorsMessages: [ {
+                        message: e.message,
+                        field: "blogId",
+                    } ],
+                })
+                return
+            }
+            res.sendStatus(HttpStatusCodes.InternalServerError)
         }
-        res.sendStatus(HttpStatusCodes.NoContent)
+    },
+    async updatePost(req: RequestWithParamsAndBody<{
+        id: string
+    }, PostInputModel>, res: Response<null | ApiErrorType>) {
+        try {
+            const updatedPost = await postsService.updatePost(req.params.id, req.body)
+            if (!updatedPost) {
+                res.sendStatus(HttpStatusCodes.NotFound)
+                return
+            }
+            res.sendStatus(HttpStatusCodes.NoContent)
+
+        } catch (e: any) {
+            if (e instanceof BlogNotFoundError) {
+                res.status(HttpStatusCodes.BadRequest).json({
+                    errorsMessages: [ {
+                        message: e.message,
+                        field: "blogId",
+                    } ],
+                })
+                return
+            }
+            res.sendStatus(HttpStatusCodes.InternalServerError)
+        }
     },
     async deletePost(req: RequestWithParams<{ id: string }>, res: Response) {
         const deletedPost = await postsService.deletePost(req.params.id)

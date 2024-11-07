@@ -42,8 +42,15 @@ describe("blogs", () => {
         expect(await col.countDocuments({})).toBe(2)
     })
 
-    it("should return status 200 and empty array", async () => {
-        await request(app).get(PATHS.BLOGS).expect(HttpStatusCodes.OK, [])
+    it("should return status 200 with empty array of blogs ", async () => {
+        const response = await request(app).get(PATHS.BLOGS).expect(HttpStatusCodes.OK)
+
+        expect(response.body).toHaveProperty("items")
+        expect(response.body.items.length).toBe(0)
+        expect(response.body).toHaveProperty("pagesCount", 1)
+        expect(response.body).toHaveProperty("page", 1)
+        expect(response.body).toHaveProperty("pageSize", 10)
+        expect(response.body).toHaveProperty("totalCount", 0)
     })
 
     it("shouldn't create blog, because user is not authorized", async () => {
@@ -103,8 +110,13 @@ describe("blogs", () => {
 
     it("should return all blogs", async () => {
         const response = await request(app).get(PATHS.BLOGS).expect(HttpStatusCodes.OK)
-        const returnedBlogs = response.body
-        expect(returnedBlogs).toHaveLength(validBlogs.length)
+
+        expect(response.body).toHaveProperty("items")
+        expect(response.body.items.length).toBeLessThanOrEqual(10)
+        expect(response.body).toHaveProperty("pagesCount", 1)
+        expect(response.body).toHaveProperty("page", 1)
+        expect(response.body).toHaveProperty("pageSize", 10)
+        expect(response.body).toHaveProperty("totalCount", validBlogs.length)
     })
 
     it("shouldn't update blog, because user is not authorized", async () => {
@@ -176,7 +188,6 @@ describe("blogs", () => {
             .expect(HttpStatusCodes.NoContent)
 
         const response = await request(app).get(PATHS.BLOGS).expect(HttpStatusCodes.OK)
-        const returnedBlogs = response.body
-        expect(returnedBlogs).toHaveLength(dbBlogs.length - 1)
+        expect(response.body).toHaveProperty("totalCount", dbBlogs.length - 1)
     })
 })

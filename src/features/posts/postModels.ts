@@ -1,5 +1,3 @@
-import { BlogViewModel } from "../blog/blogModels"
-
 export type PostDBModel = {
     title: string
     shortDescription: string
@@ -38,8 +36,4 @@ export const examplePostDocument = {
 
 export type PostSearchParams = {
     blogId?: string
-    sortBy: keyof PostViewModel
-    sortDirection: "asc" | "desc"
-    pageNumber: number
-    pageSize: number
 }

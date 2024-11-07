@@ -131,10 +131,14 @@ describe("posts", () => {
         await request(app).get(`${PATHS.POSTS}/${id}`).expect(HttpStatusCodes.NotFound)
     })
 
-    it("should return all posts", async () => {
+    it("should return first page of posts", async () => {
         const response = await request(app).get(PATHS.POSTS).expect(HttpStatusCodes.OK)
-        const returnedPosts = response.body
-        expect(returnedPosts).toHaveLength(validPosts.length)
+
+        expect(response.body).toHaveProperty("items")
+        expect(response.body).toHaveProperty("pagesCount")
+        expect(response.body).toHaveProperty("page")
+        expect(response.body).toHaveProperty("pageSize", 10)
+        expect(response.body).toHaveProperty("totalCount", validPosts.length)
     })
 
     it("shouldn't update post, because user is not authorized", async () => {

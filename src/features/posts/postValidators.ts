@@ -1,5 +1,4 @@
 import { body } from "express-validator"
-import { blogsService } from "../blog/blogsService"
 
 const titleValidator = body("title")
     .isString()
@@ -22,12 +21,4 @@ const contentValidator = body("content")
     .isLength({ min: 3, max: 1000 })
     .withMessage("Content length should be between 3 and 1000 characters")
 
-const blogIdValidator = body("blogId").custom(async (blogId) => {
-    const blog = await blogsService.getBlogById(blogId)
-    if (!blog) {
-        throw new Error("Blog with such id not found")
-    }
-    return true
-})
-
-export const postValidators = [ titleValidator, shortDescriptionValidator, contentValidator, blogIdValidator ]
+export const postValidators = [ titleValidator, shortDescriptionValidator, contentValidator ]

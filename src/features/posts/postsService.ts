@@ -1,21 +1,18 @@
 import { BlogDBModel } from "../blog/blogModels"
 import { blogsRepository } from "../blog/blogsRepository"
-import { PostDBModel, PostInputModel, PostSearchParams, PostViewModel } from "./postModels"
+import { PostDBModel, PostInputModel, PostViewModel } from "./postModels"
 import { postsRepository } from "./postsRepository"
-import { Paginator } from "../../types"
+
+export class BlogNotFoundError extends Error {
+    constructor(message: string) {
+        super(message)
+    }
+}
 
 export const postsService = {
-    getPosts: async (queryParams: PostSearchParams): Promise<Paginator<PostViewModel>> => {
-        const foundPosts = await postsRepository.getPosts(queryParams)
-        const totalCount = await postsRepository.getPostsCount()
-
-        return {
-            pagesCount: Math.ceil(totalCount / queryParams.pageSize),
-            page: queryParams.pageNumber,
-            pageSize: queryParams.pageSize,
-            totalCount,
-            items: foundPosts,
-        }
+    getPosts: async (): Promise<any> => {
+        // const foundPosts = await postsRepository.getPosts(queryParams)
+        // const totalCount = await postsRepository.getPostsCount()
     },
     getPostById: async (id: string): Promise<PostViewModel | null> => {
         return await postsRepository.getPostById(id)
@@ -23,6 +20,11 @@ export const postsService = {
     createPost: async (input: PostInputModel): Promise<PostViewModel> => {
         // TODO: уточнить - тут нужно обращаться к сервису или к репозиторию?
         const blog = await blogsRepository.getBlogById(input.blogId) as BlogDBModel
+
+        if (!blog) {
+            throw new BlogNotFoundError("Blog with such id not found")
+        }
+
         const newPost: PostDBModel = {
             title: input.title,
             shortDescription: input.shortDescription,
@@ -36,6 +38,11 @@ export const postsService = {
     updatePost: async (id: string, input_post: PostInputModel): Promise<boolean> => {
         // TODO: уточнить - тут нужно обращаться к сервису или к репозиторию?
         const blog = await blogsRepository.getBlogById(input_post.blogId) as BlogDBModel
+
+        if (!blog) {
+            throw new BlogNotFoundError("Blog with such id not found")
+        }
+
         const updatedPost: Partial<PostDBModel> = {
             title: input_post.title,
             shortDescription: input_post.shortDescription,

@@ -30,3 +30,10 @@ export type Paginator<T> = {
     totalCount: number
     items: T[]
 }
+
+export type PagingParams<T> = {
+    sortBy: keyof T
+    sortDirection: "asc" | "desc"
+    pageNumber: number
+    pageSize: number
+}
