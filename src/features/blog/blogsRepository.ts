@@ -15,9 +15,9 @@ export const blogsRepository = {
         const foundBlog = await blogsCollection.findOne({ _id })
         return foundBlog ? removeObjectId(foundBlog) : null
     },
-    createBlog: async (newBlog: BlogDBModel): Promise<BlogViewModel> => {
-        await blogsCollection.insertOne(newBlog)
-        return removeObjectId(newBlog as WithId<BlogDBModel>)
+    createBlog: async (newBlog: BlogDBModel): Promise<string> => {
+        const result = await blogsCollection.insertOne(newBlog)
+        return result.insertedId.toString()
     },
     updateBlog: async (id: string, input: BlogInputModel): Promise<boolean> => {
         const _id = new ObjectId(id)

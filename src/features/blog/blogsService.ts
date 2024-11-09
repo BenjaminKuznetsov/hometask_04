@@ -12,7 +12,7 @@ export const blogsService = {
     // getPostsByBlogId: async (searchParams: PostSearchParams): Promise<Paginator<PostViewModel>> => {
     //     return await postsService.getPosts(searchParams)
     // },
-    createBlog: async (input: BlogInputModel): Promise<BlogViewModel> => {
+    createBlog: async (input: BlogInputModel): Promise<string> => {
         const newBlog: BlogDBModel = {
             ...input,
             createdAt: new Date().toISOString(),

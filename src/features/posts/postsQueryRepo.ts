@@ -3,10 +3,15 @@ import { postsCollection } from "../../db/mongo"
 import { ObjectId, WithId } from "mongodb"
 import { Paginator, PagingParams } from "../../types"
 
-function dbToViewMapper(post: WithId<PostDBModel>): PostViewModel {
+function postMapperToView(post: WithId<PostDBModel>): PostViewModel {
     return {
-        ...post,
         id: post._id.toString(),
+        title: post.title,
+        shortDescription: post.shortDescription,
+        content: post.content,
+        blogId: post.blogId.toString(),
+        blogName: post.blogName,
+        createdAt: post.createdAt,
     }
 }
 
@@ -14,7 +19,7 @@ export const postsQueryRepo = {
     getPostsWithPagingAndFilter: async (searchParams: PostSearchParams, pagingParams: PagingParams<PostViewModel>): Promise<Paginator<PostViewModel>> => {
         const filter: Record<string, unknown> = {}
         if (searchParams.blogId) {
-            filter.blogId = new ObjectId(searchParams.blogId)
+            filter.blogId = searchParams.blogId
         }
 
         const foundPosts = await postsCollection
@@ -31,12 +36,12 @@ export const postsQueryRepo = {
             page: pagingParams.pageNumber,
             pageSize: pagingParams.pageSize,
             totalCount,
-            items: foundPosts.map(dbToViewMapper),
+            items: foundPosts.map(postMapperToView),
         }
     },
     getPostById: async (id: string): Promise<PostViewModel | null> => {
         const _id = new ObjectId(id)
         const foundPost = await postsCollection.findOne({ _id })
-        return foundPost ? dbToViewMapper(foundPost) : null
+        return foundPost ? postMapperToView(foundPost) : null
     },
 }

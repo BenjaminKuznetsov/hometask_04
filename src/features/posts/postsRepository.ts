@@ -16,10 +16,9 @@ export const postsRepository = {
         const foundPost = await postsCollection.findOne({ _id })
         return foundPost ? dbToViewMapper(foundPost) : null
     },
-    createPost: async (newPost: PostDBModel): Promise<PostViewModel> => {
-        await postsCollection.insertOne(newPost)
-        return dbToViewMapper(newPost as WithId<PostDBModel>)
-
+    createPost: async (newPost: PostDBModel): Promise<string> => {
+        const result = await postsCollection.insertOne(newPost)
+        return result.insertedId.toString()
     },
     updatePost: async (id: string, updatedPost: Partial<PostDBModel>): Promise<boolean> => {
         // TODO: move searching blog to service

@@ -10,11 +10,12 @@ import {
     RequestWithParamsAndBody,
 } from "../../types"
 import { authMiddleware } from "../../middleware/auth"
-import { postValidators } from "./postValidators"
+import { blogIdMongoValidator, blogIdValidator, postValidators } from "./postValidators"
 import { HttpStatusCodes } from "../../lib/httpStatusCodes"
 import { handleErrorsMiddleware } from "../../middleware/handleErrors"
-import { formatErrors, isKeyOf } from "../../lib/helpers"
+import { isKeyOf } from "../../lib/helpers"
 import { postsQueryRepo } from "./postsQueryRepo"
+import { ObjectId } from "mongodb"
 
 export const postsRouter = express.Router()
 
@@ -22,12 +23,12 @@ const postsController = {
     async getPosts(req: Request, res: Response<Paginator<PostViewModel>>) {
 
         const pagingParams: PagingParams<PostViewModel> = {
-            sortBy: isKeyOf(req.params.sortBy, examplePostDocument)
-                ? req.params.sortBy
+            sortBy: isKeyOf(req.query.sortBy, examplePostDocument)
+                ? req.query.sortBy
                 : "createdAt",
-            sortDirection: req.params.sortDirection === "desc" ? "desc" : "asc",
-            pageNumber: Number(req.params.pageNumber) || 1,
-            pageSize: Number(req.params.pageSize) || 10,
+            sortDirection: req.query.sortDirection === "asc" ? "asc" : "desc",
+            pageNumber: !!req.query.pageNumber && Number(req.query.pageNumber) > 0 ? Number(req.query.pageNumber) : 1,
+            pageSize: !!req.query.pageSize && Number(req.query.pageSize) > 0 ? Number(req.query.pageSize) : 10,
         }
 
         const result = await postsQueryRepo.getPostsWithPagingAndFilter({}, pagingParams)
@@ -35,6 +36,11 @@ const postsController = {
     },
 
     async getPostById(req: RequestWithParams<{ id: string }>, res: Response<PostViewModel>) {
+        if (!ObjectId.isValid(req.params.id)) {
+            res.sendStatus(HttpStatusCodes.NotFound)
+            return
+        }
+
         const foundPost = await postsQueryRepo.getPostById(req.params.id)
         if (!foundPost) {
             res.sendStatus(HttpStatusCodes.NotFound)
@@ -42,11 +48,13 @@ const postsController = {
             res.status(HttpStatusCodes.OK).json(foundPost)
         }
     },
+
     async createPost(req: RequestWithBody<PostInputModel>, res: Response<PostViewModel | ApiErrorType>) {
 
         try {
-            const createdPost = await postsService.createPost(req.body)
-            res.status(HttpStatusCodes.Created).json(createdPost)
+            const createdPostId = await postsService.createPost(req.body)
+            const createdPost = await postsQueryRepo.getPostById(createdPostId)
+            res.status(HttpStatusCodes.Created).json(createdPost!)
         } catch (e: any) {
             if (e instanceof BlogNotFoundError) {
                 res.status(HttpStatusCodes.BadRequest).json({
@@ -57,7 +65,7 @@ const postsController = {
                 })
                 return
             }
-            res.sendStatus(HttpStatusCodes.InternalServerError)
+            throw e
         }
     },
     async updatePost(req: RequestWithParamsAndBody<{
@@ -81,7 +89,7 @@ const postsController = {
                 })
                 return
             }
-            res.sendStatus(HttpStatusCodes.InternalServerError)
+            throw e
         }
     },
     async deletePost(req: RequestWithParams<{ id: string }>, res: Response) {
@@ -101,6 +109,8 @@ postsRouter.get("/:id", postsController.getPostById)
 postsRouter.post("/",
     authMiddleware,
     ...postValidators,
+    blogIdValidator,
+    blogIdMongoValidator,
     handleErrorsMiddleware,
     postsController.createPost,
 )
@@ -108,6 +118,8 @@ postsRouter.post("/",
 postsRouter.put("/:id",
     authMiddleware,
     ...postValidators,
+    blogIdValidator,
+    blogIdMongoValidator,
     handleErrorsMiddleware,
     postsController.updatePost,
 )

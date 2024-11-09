@@ -17,7 +17,7 @@ export const postsService = {
     getPostById: async (id: string): Promise<PostViewModel | null> => {
         return await postsRepository.getPostById(id)
     },
-    createPost: async (input: PostInputModel): Promise<PostViewModel> => {
+    createPost: async (input: PostInputModel): Promise<string> => {
         // TODO: уточнить - тут нужно обращаться к сервису или к репозиторию?
         const blog = await blogsRepository.getBlogById(input.blogId) as BlogDBModel
 

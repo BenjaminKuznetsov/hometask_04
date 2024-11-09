@@ -1,4 +1,4 @@
-import { body, validationResult } from "express-validator"
+import { body, param, validationResult } from "express-validator"
 import { NextFunction, Request, Response } from "express"
 import { HttpStatusCodes } from "../../lib/httpStatusCodes"
 
@@ -8,12 +8,14 @@ export const nameValidator = body("name")
     .trim()
     .isLength({ min: 3, max: 15 })
     .withMessage("Name length should be between 3 and 15 characters")
+
 export const descriptionValidator = body("description")
     .isString()
     .withMessage("Description should be a string")
     .trim()
     .isLength({ min: 3, max: 500 })
     .withMessage("Description length should be between 3 and 500 characters")
+
 export const urlValidator = body("websiteUrl")
     .isString()
     .withMessage("Url should be a string")

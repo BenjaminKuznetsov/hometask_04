@@ -3,10 +3,14 @@ import { blogsCollection } from "../../db/mongo"
 import { ObjectId, WithId } from "mongodb"
 import { Paginator, PagingParams } from "../../types"
 
-function removeObjectId(blog: WithId<BlogDBModel>): BlogViewModel {
+function blogMapperToView(blog: WithId<BlogDBModel>): BlogViewModel {
     return {
-        ...blog,
         id: blog._id.toString(),
+        name: blog.name,
+        description: blog.description,
+        websiteUrl: blog.websiteUrl,
+        createdAt: blog.createdAt,
+        isMembership: blog.isMembership,
     }
 }
 
@@ -32,13 +36,13 @@ export const blogsQueryRepo = {
             page: pagingParams.pageNumber,
             pageSize: pagingParams.pageSize,
             totalCount,
-            items: foundBlogs.map(removeObjectId),
+            items: foundBlogs.map(blogMapperToView),
         }
 
     },
     getBlogById: async (id: string): Promise<BlogViewModel | null> => {
         const _id = new ObjectId(id)
         const foundBlog = await blogsCollection.findOne({ _id })
-        return foundBlog ? removeObjectId(foundBlog) : null
+        return foundBlog ? blogMapperToView(foundBlog) : null
     },
 }
