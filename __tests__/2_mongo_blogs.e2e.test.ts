@@ -4,7 +4,7 @@ import { PATHS } from "../src/lib/paths"
 import { HttpStatusCodes } from "../src/lib/httpStatusCodes"
 import { invalidBlogs, validBlogs } from "../src/mock"
 import { encodeToBase64 } from "../src/lib/helpers"
-import { runTestDb } from "../src/db/mongo"
+import { runTestDbInNemory } from "../src/db/mongo"
 import { MongoMemoryServer } from "mongodb-memory-server"
 import { MongoClient, ObjectId } from "mongodb"
 import { BlogViewModel } from "../src/features/blog/blogModels"
@@ -19,7 +19,7 @@ describe("blogs", () => {
     const dbBlogs: BlogViewModel[] = []
 
     beforeAll(async () => {
-        const { server, client } = await runTestDb()
+        const { server, client } = await runTestDbInNemory()
         mongoServer = server
         mongoClient = client
     })

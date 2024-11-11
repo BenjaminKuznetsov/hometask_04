@@ -225,3 +225,31 @@ export const invalidPosts = [
         content: "This post explains how TypeScript helps maintain code quality in large projects",
     },
 ]
+
+export const users = [
+    {
+        login: "JohnDoe",
+        email: "johnan@john.com",
+        password: "johnjohn",
+    },
+    {
+        login: "DaveSmith",
+        email: "dave@dave.com",
+        password: "davedave",
+    },
+    {
+        login: "AnnJohnson",
+        email: "ann@ann.com",
+        password: "annann",
+    },
+    {
+        login: "BobBrown",
+        email: "bob@bob.com",
+        password: "bobbob",
+    },
+    {
+        login: "AlexWiams",
+        email: "alex@alex.com",
+        password: "bobbob",
+    },
+]

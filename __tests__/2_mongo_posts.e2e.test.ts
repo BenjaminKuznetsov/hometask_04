@@ -7,7 +7,7 @@ import { encodeToBase64 } from "../src/lib/helpers"
 import { MongoMemoryServer } from "mongodb-memory-server"
 import { MongoClient, ObjectId } from "mongodb"
 import { BlogViewModel } from "../src/features/blog/blogModels"
-import { runTestDb } from "../src/db/mongo"
+import { runTestDbInNemory } from "../src/db/mongo"
 import { PostViewModel } from "../src/features/posts/postModels"
 import __ from "lodash"
 import { isValidIsoDate } from "./helpers/utils"
@@ -22,7 +22,7 @@ describe("posts", () => {
     const dbPosts: PostViewModel[] = []
 
     beforeAll(async () => {
-        const { server, client } = await runTestDb()
+        const { server, client } = await runTestDbInNemory()
         mongoServer = server
         mongoClient = client
     })

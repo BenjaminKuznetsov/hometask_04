@@ -3,8 +3,8 @@ import { blogsRepository } from "./blogsRepository"
 
 export const blogsService = {
     // getBlogs: async (): Promise<any> => {
-    // const foundBlogs = await blogsRepository.getBlogs(queryParams)
-    // const totalCount = await blogsRepository.getBlogsCount()
+    // const foundBlogs = await usersRepository.getBlogs(queryParams)
+    // const totalCount = await usersRepository.getBlogsCount()
     // },
     getBlogById: async (id: string): Promise<BlogViewModel | null> => {
         return await blogsRepository.getBlogById(id)
