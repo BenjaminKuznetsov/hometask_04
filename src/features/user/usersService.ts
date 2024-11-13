@@ -30,7 +30,7 @@ export const usersService = {
             }
         }
 
-        const passwordHash = await this._generateHash(input.password)
+        const passwordHash = await bcrypt.hash(input.password, 10)
 
         const newUser: UserDBModel = {
             login: input.login,
@@ -47,16 +47,15 @@ export const usersService = {
     },
 
     async checkCredentials(loginOrEmail: string, password: string): Promise<boolean> {
-        const passwordHash = await this._generateHash(password)
-        const user = await usersRepo.getUserByLoginOrEmailAndHash(loginOrEmail, passwordHash)
-        return !!user
+        const user = await usersRepo.getUserByLoginOrEmailAndHash(loginOrEmail)
+        if (!user) {
+            return false
+        }
+
+        return await bcrypt.compare(password, user.passwordHash)
     },
 
     async deleteUser(id: string): Promise<boolean> {
         return await usersRepo.deleteUser(id)
-    },
-
-    async _generateHash(password: string): Promise<string> {
-        return await bcrypt.hash(password, 10)
     },
 }

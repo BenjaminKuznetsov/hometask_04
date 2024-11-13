@@ -22,12 +22,12 @@ export const usersRepo = {
         return foundUser ? removeObjectId(foundUser) : null
     },
 
-    getUserByLoginOrEmailAndHash: async (loginOrEmail: string, passwordHash: string): Promise<UserDBModel | null> => {
+    getUserByLoginOrEmailAndHash: async (loginOrEmail: string): Promise<UserDBModel | null> => {
         let foundUser
         if (loginOrEmail.includes("@")) {
-            foundUser = await usersCollection.findOne({ email: loginOrEmail, passwordHash })
+            foundUser = await usersCollection.findOne({ email: loginOrEmail })
         } else {
-            foundUser = await usersCollection.findOne({ login: loginOrEmail, passwordHash })
+            foundUser = await usersCollection.findOne({ login: loginOrEmail })
         }
         return foundUser ? removeObjectId(foundUser) : null
     },
