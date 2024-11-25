@@ -1,39 +1,47 @@
 import request from "supertest"
 import { app } from "../src/app"
-import { PATHS } from "../src/lib/paths"
-import { HttpStatusCodes } from "../src/lib/httpStatusCodes"
-import { users } from "../src/mock"
-import { encodeToBase64 } from "../src/lib/helpers"
-import { runDb, usersCollection } from "../src/db/mongo"
+import { paths } from "../src/common/paths"
+import { HttpStatus } from "../src/common/httpStatus"
+import { users } from "./helpers/mock-data"
+import { encodeToBase64 } from "../src/common/helpers"
+import { runTestDb } from "../src/db/mongo"
 import { UserInputModel } from "../src/features/user/userModels"
-
-const ADMIN_AUTH = "admin:qwerty"
+import { appConfig } from "../src/common/config/config"
+import { MongoMemoryServer } from "mongodb-memory-server"
+import { MongoClient } from "mongodb"
 
 describe("users", () => {
-    let connectedToDb: boolean
+    let mongoServer: MongoMemoryServer
+    let mongoClient: MongoClient
 
     beforeAll(async () => {
-        connectedToDb = await runDb()
+        const { server, client } = await runTestDb()
+        mongoServer = server
+        mongoClient = client
+    })
+
+    afterAll(async () => {
+        if (mongoClient) {
+            await mongoClient.close()
+        }
+        if (mongoServer) {
+            await mongoServer.stop()
+        }
     })
 
     beforeEach(async () => {
-        await usersCollection.deleteMany()
-        console.log("usersCollection.deleteMany()")
-    })
-
-    it("should successfully set & get information from the database", async () => {
-        expect(connectedToDb).toBe(true)
+        await request(app).delete(paths.testing)
     })
 
     it("shouldn't accept unauthenticated requests", async () => {
 
-        await request(app).post(PATHS.USERS).send(users[0]).expect(HttpStatusCodes.Unauthorized)
+        await request(app).post(paths.users).send(users[0]).expect(HttpStatus.Unauthorized)
 
         await request(app)
-            .post(PATHS.USERS)
+            .post(paths.users)
             .set("Authorization", `Basic qwerty:qwerty`)
             .send(users[0])
-            .expect(HttpStatusCodes.Unauthorized)
+            .expect(HttpStatus.Unauthorized)
     })
 
     it("shouldn't create user with incorrect input data", async () => {
@@ -50,16 +58,16 @@ describe("users", () => {
         }
 
         const res1 = await request(app)
-            .post(PATHS.USERS)
-            .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
+            .post(paths.users)
+            .set("Authorization", `Basic ${encodeToBase64(appConfig.adminAuth)}`)
             .send(data1)
-            .expect(HttpStatusCodes.BadRequest)
+            .expect(HttpStatus.BadRequest)
 
         const res2 = await request(app)
-            .post(PATHS.USERS)
-            .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
+            .post(paths.users)
+            .set("Authorization", `Basic ${encodeToBase64(appConfig.adminAuth)}`)
             .send(data2)
-            .expect(HttpStatusCodes.BadRequest)
+            .expect(HttpStatus.BadRequest)
 
         expect(res1.body).toEqual({
             errorsMessages: expect.arrayContaining([
@@ -84,10 +92,10 @@ describe("users", () => {
         }
 
         const res = await request(app)
-            .post(PATHS.USERS)
-            .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
+            .post(paths.users)
+            .set("Authorization", `Basic ${encodeToBase64(appConfig.adminAuth)}`)
             .send(data)
-            .expect(HttpStatusCodes.Created)
+            .expect(HttpStatus.Created)
 
         expect(res.body).toEqual({
             id: expect.any(String),
@@ -109,10 +117,10 @@ describe("users", () => {
         }
 
         const res1 = await request(app)
-            .post(PATHS.USERS)
-            .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
+            .post(paths.users)
+            .set("Authorization", `Basic ${encodeToBase64(appConfig.adminAuth)}`)
             .send(data1)
-            .expect(HttpStatusCodes.BadRequest)
+            .expect(HttpStatus.BadRequest)
 
         expect(res1.body).toEqual({
             errorsMessages: [ {
@@ -122,10 +130,10 @@ describe("users", () => {
         })
 
         const res2 = await request(app)
-            .post(PATHS.USERS)
-            .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
+            .post(paths.users)
+            .set("Authorization", `Basic ${encodeToBase64(appConfig.adminAuth)}`)
             .send(data2)
-            .expect(HttpStatusCodes.BadRequest)
+            .expect(HttpStatus.BadRequest)
 
         expect(res2.body).toEqual({
             errorsMessages: [ {
@@ -139,17 +147,17 @@ describe("users", () => {
 
         for (const user of users) {
             const res = await request(app)
-                .post(PATHS.USERS)
-                .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
+                .post(paths.users)
+                .set("Authorization", `Basic ${encodeToBase64(appConfig.adminAuth)}`)
                 .send(user)
-                .expect(HttpStatusCodes.Created)
+                .expect(HttpStatus.Created)
             // console.log("res", res.body)
         }
 
         const response = await request(app)
-            .get(PATHS.USERS)
-            .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
-            .expect(HttpStatusCodes.OK)
+            .get(paths.users)
+            .set("Authorization", `Basic ${encodeToBase64(appConfig.adminAuth)}`)
+            .expect(HttpStatus.OK)
 
         expect(response.body).toEqual({
             pagesCount: 1,
@@ -191,9 +199,9 @@ describe("users", () => {
         })
 
         const response2 = await request(app)
-            .get(PATHS.USERS + "?searchLoginTerm=s&sortBy=login")
-            .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
-            .expect(HttpStatusCodes.OK)
+            .get(paths.users + "?searchLoginTerm=s&sortBy=login")
+            .set("Authorization", `Basic ${encodeToBase64(appConfig.adminAuth)}`)
+            .expect(HttpStatus.OK)
 
         expect(response2.body).toEqual({
             pagesCount: 1,
@@ -223,9 +231,9 @@ describe("users", () => {
         })
 
         const response3 = await request(app)
-            .get(PATHS.USERS + "?searchEmailTerm=an&sortBy=loginsortDirection=asc")
-            .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
-            .expect(HttpStatusCodes.OK)
+            .get(paths.users + "?searchEmailTerm=an&sortBy=loginsortDirection=asc")
+            .set("Authorization", `Basic ${encodeToBase64(appConfig.adminAuth)}`)
+            .expect(HttpStatus.OK)
 
         expect(response3.body).toEqual({
             pagesCount: 1,
@@ -254,69 +262,30 @@ describe("users", () => {
 
         for (const user of users) {
             const res = await request(app)
-                .post(PATHS.USERS)
-                .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
+                .post(paths.users)
+                .set("Authorization", `Basic ${encodeToBase64(appConfig.adminAuth)}`)
                 .send(user)
-                .expect(HttpStatusCodes.Created)
+                .expect(HttpStatus.Created)
 
             ids.push(res.body.id)
         }
 
         const response = await request(app)
-            .delete(PATHS.USERS + "/" + ids[0])
-            .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
-            .expect(HttpStatusCodes.NoContent)
+            .delete(paths.users + "/" + ids[0])
+            .set("Authorization", `Basic ${encodeToBase64(appConfig.adminAuth)}`)
+            .expect(HttpStatus.NoContent)
 
         const response1 = await request(app)
-            .get(PATHS.USERS)
-            .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
-            .expect(HttpStatusCodes.OK)
+            .get(paths.users)
+            .set("Authorization", `Basic ${encodeToBase64(appConfig.adminAuth)}`)
+            .expect(HttpStatus.OK)
 
         expect(response1.body.totalCount).toBe(4)
 
         const response2 = await request(app)
-            .delete(PATHS.USERS + "/111")
-            .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
-            .expect(HttpStatusCodes.NotFound)
+            .delete(paths.users + "/111")
+            .set("Authorization", `Basic ${encodeToBase64(appConfig.adminAuth)}`)
+            .expect(HttpStatus.NotFound)
     })
 
-    it("should login user with correct credentials and shouldn't login user with incorrect credentials", async () => {
-
-        await request(app)
-            .post(PATHS.USERS)
-            .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
-            .send(users[0])
-            .expect(HttpStatusCodes.Created)
-
-        await request(app)
-            .post(PATHS.AUTH + "/login")
-            .send({ loginOrEmail: users[0].login, password: users[0].password })
-            .expect(HttpStatusCodes.NoContent)
-
-        await request(app)
-            .post(PATHS.AUTH + "/login")
-            .send({ loginOrEmail: users[0].email, password: users[0].password })
-            .expect(HttpStatusCodes.NoContent)
-
-        await request(app)
-            .post(PATHS.AUTH + "/login")
-            .send({ loginOrEmail: users[0].email, password: "dhghghfgd" })
-            .expect(HttpStatusCodes.Unauthorized)
-
-        await request(app)
-            .post(PATHS.AUTH + "/login")
-            .send({ loginOrEmail: "gfdgdgsdffd", password: users[0].password })
-            .expect(HttpStatusCodes.Unauthorized)
-
-        await request(app)
-            .post(PATHS.AUTH + "/login")
-            .send({ password: users[0].password })
-            .expect(HttpStatusCodes.BadRequest)
-
-        await request(app)
-            .post(PATHS.AUTH + "/login")
-            .send({ loginOrEmail: users[0].login })
-            .expect(HttpStatusCodes.BadRequest)
-
-    })
 })

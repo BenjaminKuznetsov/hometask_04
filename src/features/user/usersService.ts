@@ -1,36 +1,23 @@
 import { UserDBModel, UserInputModel } from "./userModels"
 import { usersRepo } from "./usersRepo"
-import bcrypt from "bcrypt"
-
-type ResultObject = {
-    status: "success" | "error"
-    createdUserId?: string
-    field?: string
-    message?: string
-}
+import { ResultType } from "../../common/result/result.type"
+import { resultHelpers } from "../../common/result/helpers"
+import { bcryptService } from "../../common/adapters/bcrypt.service"
 
 export const usersService = {
 
-    async createUser(input: UserInputModel): Promise<ResultObject> {
+    async createUser(input: UserInputModel): Promise<ResultType<{ createdUserId: string } | null>> {
         const userWithSuchLogin = await usersRepo.getUserByFilter({ login: input.login })
         if (userWithSuchLogin) {
-            return {
-                status: "error",
-                field: "login",
-                message: "User with such login already exists",
-            }
+            return resultHelpers.badRequest({ field: "login", message: "User with such login already exists" })
         }
 
         const userWithSuchEmail = await usersRepo.getUserByFilter({ email: input.email })
         if (userWithSuchEmail) {
-            return {
-                status: "error",
-                field: "email",
-                message: "User with such email already exists",
-            }
+            return resultHelpers.badRequest({ field: "email", message: "User with such email already exists" })
         }
 
-        const passwordHash = await bcrypt.hash(input.password, 10)
+        const passwordHash = await bcryptService.generateHash(input.password)
 
         const newUser: UserDBModel = {
             login: input.login,
@@ -40,19 +27,7 @@ export const usersService = {
         }
         const newUserId = await usersRepo.createUser(newUser)
 
-        return {
-            status: "success",
-            createdUserId: newUserId,
-        }
-    },
-
-    async checkCredentials(loginOrEmail: string, password: string): Promise<boolean> {
-        const user = await usersRepo.getUserByLoginOrEmailAndHash(loginOrEmail)
-        if (!user) {
-            return false
-        }
-
-        return await bcrypt.compare(password, user.passwordHash)
+        return resultHelpers.success({ createdUserId: newUserId })
     },
 
     async deleteUser(id: string): Promise<boolean> {

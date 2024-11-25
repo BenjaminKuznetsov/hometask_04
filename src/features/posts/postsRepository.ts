@@ -11,25 +11,38 @@ function dbToViewMapper(post: WithId<PostDBModel>): PostViewModel {
 }
 
 export const postsRepository = {
-    getPostById: async (id: string): Promise<PostViewModel | null> => {
+    _isValidId: (id: string): boolean => {
+        return ObjectId.isValid(id)
+    },
+
+    async getPostById(id: string): Promise<PostViewModel | null> {
         const _id = new ObjectId(id)
         const foundPost = await postsCollection.findOne({ _id })
         return foundPost ? dbToViewMapper(foundPost) : null
     },
-    createPost: async (newPost: PostDBModel): Promise<string> => {
+    async createPost(newPost: PostDBModel): Promise<string> {
         const result = await postsCollection.insertOne(newPost)
         return result.insertedId.toString()
     },
-    updatePost: async (id: string, updatedPost: Partial<PostDBModel>): Promise<boolean> => {
+    async updatePost(id: string, updatedPost: Partial<PostDBModel>): Promise<boolean> {
         // TODO: move searching blog to service
         const _id = new ObjectId(id)
         const result = await postsCollection.updateOne({ _id }, { $set: { ...updatedPost } })
         return !!result.matchedCount
     },
-    deletePost: async (id: string): Promise<boolean> => {
+    async deletePost(id: string): Promise<boolean> {
         const _id = new ObjectId(id)
         const result = await postsCollection.deleteOne({ _id })
         return !!result.deletedCount
+    },
+
+    async doesExistById(id: string): Promise<boolean> {
+        if (!this._isValidId(id)) {
+            return false
+        }
+        const _id = new ObjectId(id)
+        const foundPost = await postsCollection.findOne({ _id })
+        return !!foundPost
     },
 
 }

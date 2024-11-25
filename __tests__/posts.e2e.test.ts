@@ -1,18 +1,19 @@
 import request from "supertest"
 import { app } from "../src/app"
-import { PATHS } from "../src/lib/paths"
-import { HttpStatusCodes } from "../src/lib/httpStatusCodes"
-import { invalidPosts, validBlogs, validPosts } from "../src/mock"
-import { encodeToBase64 } from "../src/lib/helpers"
+import { paths } from "../src/common/paths"
+import { HttpStatus } from "../src/common/httpStatus"
+import { invalidPosts, validBlogs, validPosts } from "./helpers/mock-data"
+import { encodeToBase64 } from "../src/common/helpers"
 import { MongoMemoryServer } from "mongodb-memory-server"
 import { MongoClient, ObjectId } from "mongodb"
 import { BlogViewModel } from "../src/features/blog/blogModels"
-import { runTestDbInNemory } from "../src/db/mongo"
+import { runTestDb } from "../src/db/mongo"
 import { PostViewModel } from "../src/features/posts/postModels"
 import __ from "lodash"
 import { isValidIsoDate } from "./helpers/utils"
+import { appConfig } from "../src/common/config/config"
 
-const ADMIN_AUTH = "admin:qwerty"
+const ADMIN_AUTH = appConfig.adminAuth
 
 describe("posts", () => {
     let mongoServer: MongoMemoryServer
@@ -22,7 +23,7 @@ describe("posts", () => {
     const dbPosts: PostViewModel[] = []
 
     beforeAll(async () => {
-        const { server, client } = await runTestDbInNemory()
+        const { server, client } = await runTestDb()
         mongoServer = server
         mongoClient = client
     })
@@ -48,10 +49,10 @@ describe("posts", () => {
     it("should seed blogs", async () => {
         for (const data of validBlogs) {
             const response1 = await request(app)
-                .post(PATHS.BLOGS)
+                .post(paths.blogs)
                 .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
                 .send(data)
-                .expect(HttpStatusCodes.Created)
+                .expect(HttpStatus.Created)
 
             const createdBlog = response1.body
             dbBlogs.push(createdBlog)
@@ -61,49 +62,49 @@ describe("posts", () => {
 
     it("shouldn't create post, because user is not authorized", async () => {
         const data = validPosts[0]
-        await request(app).post(PATHS.POSTS).send(data).expect(HttpStatusCodes.Unauthorized)
+        await request(app).post(paths.posts).send(data).expect(HttpStatus.Unauthorized)
     })
 
     it("shouldn't create post, because user is not authorized (/blogs/{blogId}/posts)", async () => {
         const data = validPosts[0]
-        await request(app).post(`${PATHS.BLOGS}/${dbBlogs[0].id}/posts`).send(data).expect(HttpStatusCodes.Unauthorized)
+        await request(app).post(`${paths.blogs}/${dbBlogs[0].id}/posts`).send(data).expect(HttpStatus.Unauthorized)
     })
 
     it("shouldn't create post with incorrect auth credentials", async () => {
         const data = validPosts[0]
         await request(app)
-            .post(PATHS.POSTS)
+            .post(paths.posts)
             .set("Authorization", `Basic qwerty:qwerty`)
             .send(data)
-            .expect(HttpStatusCodes.Unauthorized)
+            .expect(HttpStatus.Unauthorized)
     })
 
     it("shouldn't create post with incorrect auth credentials (/blogs/{blogId}/posts)", async () => {
         const data = validPosts[0]
         await request(app)
-            .post(`${PATHS.BLOGS}/${dbBlogs[0].id}/posts`)
+            .post(`${paths.blogs}/${dbBlogs[0].id}/posts`)
             .set("Authorization", `Basic qwerty:qwerty`)
             .send(data)
-            .expect(HttpStatusCodes.Unauthorized)
+            .expect(HttpStatus.Unauthorized)
     })
 
     it("shouldn't create post with incorrect input data", async () => {
         for (const data of invalidPosts) {
             await request(app)
-                .post(PATHS.POSTS)
+                .post(paths.posts)
                 .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
                 .send(data)
-                .expect(HttpStatusCodes.BadRequest)
+                .expect(HttpStatus.BadRequest)
         }
     })
 
     it("shouldn't create post with incorrect input data (/blogs/{blogId}/posts)", async () => {
         for (const data of invalidPosts) {
             await request(app)
-                .post(`${PATHS.BLOGS}/${dbBlogs[0].id}/posts`)
+                .post(`${paths.blogs}/${dbBlogs[0].id}/posts`)
                 .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
                 .send(data)
-                .expect(HttpStatusCodes.BadRequest)
+                .expect(HttpStatus.BadRequest)
         }
     })
 
@@ -111,20 +112,20 @@ describe("posts", () => {
         const data = validPosts[0]
         data.blogId = new ObjectId().toString()
         await request(app)
-            .post(PATHS.POSTS)
+            .post(paths.posts)
             .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
             .send(data)
-            .expect(HttpStatusCodes.BadRequest)
+            .expect(HttpStatus.BadRequest)
     })
 
     it("shouldn`t create post with incorrect blog id (/blogs/{blogId}/posts)", async () => {
         const data = validPosts[0]
         const blogId = new ObjectId().toString()
         await request(app)
-            .post(`${PATHS.BLOGS}/${blogId}/posts`)
+            .post(`${paths.blogs}/${blogId}/posts`)
             .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
             .send(data)
-            .expect(HttpStatusCodes.NotFound)
+            .expect(HttpStatus.NotFound)
     })
 
     it("should create some posts and then find it by id", async () => {
@@ -133,10 +134,10 @@ describe("posts", () => {
             expect(blog).toBeDefined()
 
             const response1 = await request(app)
-                .post(PATHS.POSTS)
+                .post(paths.posts)
                 .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
                 .send({ ...data, blogId: blog.id })
-                .expect(HttpStatusCodes.Created)
+                .expect(HttpStatus.Created)
 
             // console.log(response1.body)
 
@@ -150,8 +151,8 @@ describe("posts", () => {
             expect(isValidIsoDate(createdPost.createdAt)).toBe(true)
 
             const response2 = await request(app)
-                .get(`${PATHS.POSTS}/${createdPost.id}`)
-                .expect(HttpStatusCodes.OK)
+                .get(`${paths.posts}/${createdPost.id}`)
+                .expect(HttpStatus.OK)
             const foundBlog = response2.body
 
             expect(foundBlog.id).toBe(createdPost.id)
@@ -165,10 +166,10 @@ describe("posts", () => {
             expect(blog).toBeDefined()
 
             const response1 = await request(app)
-                .post(`${PATHS.BLOGS}/${blog.id}/posts`)
+                .post(`${paths.blogs}/${blog.id}/posts`)
                 .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
                 .send({ ...data })
-                .expect(HttpStatusCodes.Created)
+                .expect(HttpStatus.Created)
 
             // console.log(response1.body)
 
@@ -182,8 +183,8 @@ describe("posts", () => {
             expect(isValidIsoDate(createdPost.createdAt)).toBe(true)
 
             const response2 = await request(app)
-                .get(`${PATHS.POSTS}/${createdPost.id}`)
-                .expect(HttpStatusCodes.OK)
+                .get(`${paths.posts}/${createdPost.id}`)
+                .expect(HttpStatus.OK)
             const foundBlog = response2.body
 
             expect(foundBlog.id).toBe(createdPost.id)
@@ -193,11 +194,11 @@ describe("posts", () => {
 
     it("shouldn't find post with non-existent id", async () => {
         const id = new ObjectId().toString()
-        await request(app).get(`${PATHS.POSTS}/${id}`).expect(HttpStatusCodes.NotFound)
+        await request(app).get(`${paths.posts}/${id}`).expect(HttpStatus.NotFound)
     })
 
     it("should return first page of posts", async () => {
-        const response = await request(app).get(PATHS.POSTS).expect(HttpStatusCodes.OK)
+        const response = await request(app).get(paths.posts).expect(HttpStatus.OK)
 
         expect(response.body).toHaveProperty("items")
         expect(response.body).toHaveProperty("pagesCount")
@@ -210,7 +211,7 @@ describe("posts", () => {
 
     it("GET /blogs/{blogId}/posts and GET /posts?blogId={blogId} should return same data", async () => {
         for (const blog of dbBlogs) {
-            const response1 = await request(app).get(`${PATHS.BLOGS}/${blog.id}/posts`).expect(HttpStatusCodes.OK)
+            const response1 = await request(app).get(`${paths.blogs}/${blog.id}/posts`).expect(HttpStatus.OK)
             const expectedCount = dbPosts.filter(post => post.blogId === blog.id).length
 
             expect(response1.body.totalCount).toBe(expectedCount)
@@ -220,17 +221,17 @@ describe("posts", () => {
     it("shouldn't update post, because user is not authorized", async () => {
         const id = new ObjectId().toString()
         const data = validPosts[0]
-        await request(app).put(`${PATHS.POSTS}/${id}`).send(data).expect(HttpStatusCodes.Unauthorized)
+        await request(app).put(`${paths.posts}/${id}`).send(data).expect(HttpStatus.Unauthorized)
     })
 
     it("shouldn't update post with incorrect input data", async () => {
         for (const data of invalidPosts) {
             const id = dbPosts[0].id
             const response = await request(app)
-                .put(`${PATHS.POSTS}/${id}`)
+                .put(`${paths.posts}/${id}`)
                 .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
                 .send(data)
-                .expect(HttpStatusCodes.BadRequest)
+                .expect(HttpStatus.BadRequest)
             // console.log(JSON.stringify(response.body, null, 2))
         }
     })
@@ -240,10 +241,10 @@ describe("posts", () => {
         const data = validPosts[0]
         data.blogId = dbBlogs[0].id
         const res = await request(app)
-            .put(`${PATHS.POSTS}/${postId}`)
+            .put(`${paths.posts}/${postId}`)
             .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
             .send(data)
-            .expect(HttpStatusCodes.NotFound)
+            .expect(HttpStatus.NotFound)
         // console.log("res", res.body)
     })
 
@@ -252,10 +253,10 @@ describe("posts", () => {
         const data = validPosts[2]
         data.blogId = new ObjectId().toString()
         const res = await request(app)
-            .put(`${PATHS.POSTS}/${postId}`)
+            .put(`${paths.posts}/${postId}`)
             .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
             .send(data)
-            .expect(HttpStatusCodes.BadRequest)
+            .expect(HttpStatus.BadRequest)
         // console.log(res.body)
     })
 
@@ -266,14 +267,14 @@ describe("posts", () => {
         expect(blog).toBeDefined()
 
         await request(app)
-            .put(`${PATHS.POSTS}/${post.id}`)
+            .put(`${paths.posts}/${post.id}`)
             .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
             .send({ ...data, blogId: blog.id })
-            .expect(HttpStatusCodes.NoContent)
+            .expect(HttpStatus.NoContent)
 
         const res2 = await request(app)
-            .get(`${PATHS.POSTS}/${post.id}`)
-            .expect(HttpStatusCodes.OK)
+            .get(`${paths.posts}/${post.id}`)
+            .expect(HttpStatus.OK)
 
         const updatedPost = res2.body
 
@@ -287,22 +288,22 @@ describe("posts", () => {
 
     it("shouldn't delete post, because user is not authorized", async () => {
         const postId = dbPosts[0].id
-        await request(app).delete(`${PATHS.POSTS}/${postId}`).expect(HttpStatusCodes.Unauthorized)
+        await request(app).delete(`${paths.posts}/${postId}`).expect(HttpStatus.Unauthorized)
     })
 
     it("shouldn't delete post with non-existent id", async () => {
         const postId = new ObjectId().toString()
         await request(app)
-            .delete(`${PATHS.POSTS}/${postId}`)
+            .delete(`${paths.posts}/${postId}`)
             .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
-            .expect(HttpStatusCodes.NotFound)
+            .expect(HttpStatus.NotFound)
     })
 
     it("should delete post with correct id", async () => {
         const postId = dbPosts[0].id
         await request(app)
-            .delete(`${PATHS.POSTS}/${postId}`)
+            .delete(`${paths.posts}/${postId}`)
             .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
-            .expect(HttpStatusCodes.NoContent)
+            .expect(HttpStatus.NoContent)
     })
 })

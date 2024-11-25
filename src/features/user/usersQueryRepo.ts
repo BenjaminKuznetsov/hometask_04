@@ -1,7 +1,7 @@
-import { UserDBModel, UserSearchParams, UserViewModel } from "./userModels"
+import { MeViewModel, UserDBModel, UserSearchParams, UserViewModel } from "./userModels"
 import { usersCollection } from "../../db/mongo"
 import { ObjectId, WithId } from "mongodb"
-import { Paginator, PagingParams } from "../../types"
+import { Paginator, PagingParams } from "../../common/types/types"
 
 function userMapperToView(user: WithId<UserDBModel>): UserViewModel {
     return {
@@ -49,5 +49,15 @@ export const usersQueryRepo = {
     getUserById: async (id: string): Promise<UserViewModel | null> => {
         const foundUser = await usersCollection.findOne({ _id: new ObjectId(id) })
         return foundUser ? userMapperToView(foundUser) : null
+    },
+
+    async getMe(id: string): Promise<MeViewModel> {
+        const userId = new ObjectId(id)
+        const foundUser = await usersCollection.findOne({ _id: userId })
+        return {
+            userId: foundUser!._id.toString(),
+            login: foundUser!.login,
+            email: foundUser!.email,
+        }
     },
 }

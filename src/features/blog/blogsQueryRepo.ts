@@ -1,7 +1,7 @@
 import { BlogDBModel, BlogSearchParams, BlogViewModel } from "./blogModels"
 import { blogsCollection } from "../../db/mongo"
 import { ObjectId, WithId } from "mongodb"
-import { Paginator, PagingParams } from "../../types"
+import { Paginator, PagingParams } from "../../common/types/types"
 
 function blogMapperToView(blog: WithId<BlogDBModel>): BlogViewModel {
     return {

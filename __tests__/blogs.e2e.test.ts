@@ -1,16 +1,17 @@
 import request from "supertest"
 import { app } from "../src/app"
-import { PATHS } from "../src/lib/paths"
-import { HttpStatusCodes } from "../src/lib/httpStatusCodes"
-import { invalidBlogs, validBlogs } from "../src/mock"
-import { encodeToBase64 } from "../src/lib/helpers"
-import { runTestDbInNemory } from "../src/db/mongo"
+import { paths } from "../src/common/paths"
+import { HttpStatus } from "../src/common/httpStatus"
+import { invalidBlogs, validBlogs } from "./helpers/mock-data"
+import { encodeToBase64 } from "../src/common/helpers"
+import { runTestDb } from "../src/db/mongo"
 import { MongoMemoryServer } from "mongodb-memory-server"
 import { MongoClient, ObjectId } from "mongodb"
 import { BlogViewModel } from "../src/features/blog/blogModels"
 import { isValidIsoDate } from "./helpers/utils"
+import { appConfig } from "../src/common/config/config"
 
-const ADMIN_AUTH = "admin:qwerty"
+const ADMIN_AUTH = appConfig.adminAuth
 
 describe("blogs", () => {
     let mongoServer: MongoMemoryServer
@@ -19,7 +20,7 @@ describe("blogs", () => {
     const dbBlogs: BlogViewModel[] = []
 
     beforeAll(async () => {
-        const { server, client } = await runTestDbInNemory()
+        const { server, client } = await runTestDb()
         mongoServer = server
         mongoClient = client
     })
@@ -43,7 +44,7 @@ describe("blogs", () => {
     })
 
     it("should return status 200 with empty array of blogs ", async () => {
-        const response = await request(app).get(PATHS.BLOGS).expect(HttpStatusCodes.OK)
+        const response = await request(app).get(paths.blogs).expect(HttpStatus.OK)
 
         expect(response.body).toHaveProperty("items")
         expect(response.body.items.length).toBe(0)
@@ -55,35 +56,35 @@ describe("blogs", () => {
 
     it("shouldn't create blog, because user is not authorized", async () => {
         const data = validBlogs[0]
-        await request(app).post(PATHS.BLOGS).send(data).expect(HttpStatusCodes.Unauthorized)
+        await request(app).post(paths.blogs).send(data).expect(HttpStatus.Unauthorized)
     })
 
     it("shouldn't create blog with incorrect auth credentials", async () => {
         const newBlog = validBlogs[0]
         await request(app)
-            .post(PATHS.BLOGS)
+            .post(paths.blogs)
             .set("Authorization", "Basic qwerty:qwerty")
             .send(newBlog)
-            .expect(HttpStatusCodes.Unauthorized)
+            .expect(HttpStatus.Unauthorized)
     })
 
     it("shouldn't create blog with incorrect input data", async () => {
         for (const data of invalidBlogs) {
             await request(app)
-                .post(PATHS.BLOGS)
+                .post(paths.blogs)
                 .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
                 .send(data)
-                .expect(HttpStatusCodes.BadRequest)
+                .expect(HttpStatus.BadRequest)
         }
     })
 
     it("should create some blogs and then find it by id", async () => {
         for (const data of validBlogs) {
             const response1 = await request(app)
-                .post(PATHS.BLOGS)
+                .post(paths.blogs)
                 .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
                 .send(data)
-                .expect(HttpStatusCodes.Created)
+                .expect(HttpStatus.Created)
 
             const createdBlog = response1.body
             expect(createdBlog.id).toBeDefined()
@@ -94,8 +95,8 @@ describe("blogs", () => {
             expect(createdBlog.isMembership).toBe(false)
 
             const response2 = await request(app)
-                .get(`${PATHS.BLOGS}/${createdBlog.id}`)
-                .expect(HttpStatusCodes.OK)
+                .get(`${paths.blogs}/${createdBlog.id}`)
+                .expect(HttpStatus.OK)
             const foundBlog = response2.body
 
             expect(foundBlog.id).toBe(createdBlog.id)
@@ -105,11 +106,11 @@ describe("blogs", () => {
 
     it("shouldn't find blog with non-existent id", async () => {
         const id = new ObjectId().toString()
-        await request(app).get(`${PATHS.BLOGS}/${id}`).expect(HttpStatusCodes.NotFound)
+        await request(app).get(`${paths.blogs}/${id}`).expect(HttpStatus.NotFound)
     })
 
     it("should return all blogs", async () => {
-        const response = await request(app).get(PATHS.BLOGS).expect(HttpStatusCodes.OK)
+        const response = await request(app).get(paths.blogs).expect(HttpStatus.OK)
 
         expect(response.body).toHaveProperty("items")
         expect(response.body.items.length).toBeLessThanOrEqual(10)
@@ -122,17 +123,17 @@ describe("blogs", () => {
     it("shouldn't update blog, because user is not authorized", async () => {
         const blogId = dbBlogs[0].id
         const data = validBlogs[5]
-        await request(app).put(`${PATHS.BLOGS}/${blogId}`).send(data).expect(HttpStatusCodes.Unauthorized)
+        await request(app).put(`${paths.blogs}/${blogId}`).send(data).expect(HttpStatus.Unauthorized)
     })
 
     it("shouldn't update blog with incorrect input data", async () => {
         for (const data of invalidBlogs) {
             const blogId = dbBlogs[0].id
             const response = await request(app)
-                .put(`${PATHS.BLOGS}/${blogId}`)
+                .put(`${paths.blogs}/${blogId}`)
                 .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
                 .send(data)
-                .expect(HttpStatusCodes.BadRequest)
+                .expect(HttpStatus.BadRequest)
             // console.log(JSON.stringify(response.body, null, 2))
         }
     })
@@ -141,24 +142,24 @@ describe("blogs", () => {
         const blogId = new ObjectId().toString()
         const data = validBlogs[0]
         await request(app)
-            .put(`${PATHS.BLOGS}/${blogId}`)
+            .put(`${paths.blogs}/${blogId}`)
             .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
             .send(data)
-            .expect(HttpStatusCodes.NotFound)
+            .expect(HttpStatus.NotFound)
     })
 
     it("should update blog with correct data", async () => {
         const blogId = dbBlogs[0].id
         const data = validBlogs[0]
         await request(app)
-            .put(`${PATHS.BLOGS}/${blogId}`)
+            .put(`${paths.blogs}/${blogId}`)
             .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
             .send(data)
-            .expect(HttpStatusCodes.NoContent)
+            .expect(HttpStatus.NoContent)
 
         const response = await request(app)
-            .get(`${PATHS.BLOGS}/${blogId}`)
-            .expect(HttpStatusCodes.OK)
+            .get(`${paths.blogs}/${blogId}`)
+            .expect(HttpStatus.OK)
         const updatedBlog = response.body
 
         expect(updatedBlog.id).toBe(blogId)
@@ -169,25 +170,25 @@ describe("blogs", () => {
 
     it("shouldn't delete blog, because user is not authorized", async () => {
         const blogId = dbBlogs[0].id
-        await request(app).delete(`${PATHS.BLOGS}/${blogId}`).expect(HttpStatusCodes.Unauthorized)
+        await request(app).delete(`${paths.blogs}/${blogId}`).expect(HttpStatus.Unauthorized)
     })
 
     it("shouldn't delete blog with non-existent id", async () => {
         const blogId = new ObjectId().toString()
         await request(app)
-            .delete(`${PATHS.BLOGS}/${blogId}`)
+            .delete(`${paths.blogs}/${blogId}`)
             .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
-            .expect(HttpStatusCodes.NotFound)
+            .expect(HttpStatus.NotFound)
     })
 
     it("should delete blog with correct id", async () => {
         const blogId = dbBlogs[0].id
         await request(app)
-            .delete(`${PATHS.BLOGS}/${blogId}`)
+            .delete(`${paths.blogs}/${blogId}`)
             .set("Authorization", `Basic ${encodeToBase64(ADMIN_AUTH)}`)
-            .expect(HttpStatusCodes.NoContent)
+            .expect(HttpStatus.NoContent)
 
-        const response = await request(app).get(PATHS.BLOGS).expect(HttpStatusCodes.OK)
+        const response = await request(app).get(paths.blogs).expect(HttpStatus.OK)
         expect(response.body).toHaveProperty("totalCount", dbBlogs.length - 1)
     })
 })

@@ -3,14 +3,17 @@ import { BlogDBModel } from "../features/blog/blogModels"
 import { PostDBModel } from "../features/posts/postModels"
 import { MongoMemoryServer } from "mongodb-memory-server"
 import { UserDBModel } from "../features/user/userModels"
+import { appConfig } from "../common/config/config"
+import { TCommentDB } from "../features/comments/comments.types"
 
 export let blogsCollection: Collection<BlogDBModel>
 export let postsCollection: Collection<PostDBModel>
 export let usersCollection: Collection<UserDBModel>
+export let commentsCollection: Collection<TCommentDB>
 
 export async function runDb() {
-    const mongoUrl = process.env.MONGO_URL || "mongodb://0.0.0.0:27017"
-    const dbName = process.env.DB_NAME || "test"
+    const mongoUrl = appConfig.mongoUrl
+    const dbName = appConfig.dbName
 
     const client = new MongoClient(mongoUrl)
     const db = client.db(dbName)
@@ -18,6 +21,7 @@ export async function runDb() {
     blogsCollection = db.collection<BlogDBModel>("blogs")
     postsCollection = db.collection<PostDBModel>("posts")
     usersCollection = db.collection<UserDBModel>("users")
+    commentsCollection = db.collection<TCommentDB>("comments")
 
     try {
         await client.connect()
@@ -40,6 +44,7 @@ export async function runTestDb() {
     blogsCollection = db.collection<BlogDBModel>("blogs")
     postsCollection = db.collection<PostDBModel>("posts")
     usersCollection = db.collection<UserDBModel>("users")
+    commentsCollection = db.collection<TCommentDB>("comments")
 
     return {
         server,

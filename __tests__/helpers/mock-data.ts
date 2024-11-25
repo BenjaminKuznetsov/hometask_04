@@ -1,3 +1,5 @@
+import { TCommentInput } from "../../src/features/comments/comments.types"
+
 export const validBlogs = [
     {
         name: "Tech Insights",
@@ -70,12 +72,12 @@ export const validPosts: any[] = [
         content:
             "In today’s world, it’s crucial that websites are fully responsive, ensuring a seamless experience across devices of all sizes...",
     },
-    // {
-    //     title: "Optimize CSS",
-    //     shortDescription: "Tips to improve the performance of your stylesheets",
-    //     content:
-    //         "Optimizing your CSS can make a significant difference in load times and overall user experience. Let’s explore some practical tips to achieve this...",
-    // },
+    {
+        title: "Optimize CSS",
+        shortDescription: "Tips to improve the performance of your stylesheets",
+        content:
+            "Optimizing your CSS can make a significant difference in load times and overall user experience. Let’s explore some practical tips to achieve this...",
+    },
     // {
     //     title: "Modern Frontend Tooling",
     //     shortDescription: "An overview of the best frontend tools for 2024",
@@ -253,3 +255,10 @@ export const users = [
         password: "bobbob",
     },
 ]
+
+export const comments: TCommentInput[] = [
+    {
+        content: "string",
+    },
+]
+

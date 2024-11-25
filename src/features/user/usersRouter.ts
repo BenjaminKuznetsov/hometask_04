@@ -1,28 +1,22 @@
 import express, { Request, Response } from "express"
 import { usersService } from "./usersService"
-import { ApiErrorType, Paginator, PagingParams, RequestWithBody, RequestWithParams } from "../../types"
-import { authMiddleware } from "../../middleware/auth"
+import { ApiErrorType, Paginator, PagingParams, RequestWithBody, RequestWithParams } from "../../common/types/types"
+import { basicAuthMiddleware } from "../../common/middleware/basic-auth"
 import { userValidators } from "./userValidators"
-import { HttpStatusCodes } from "../../lib/httpStatusCodes"
-import { handleErrorsMiddleware } from "../../middleware/handleErrors"
-import { isKeyOf } from "../../lib/helpers"
+import { HttpStatus } from "../../common/httpStatus"
+import { handleErrorsMiddleware } from "../../common/middleware/handleErrors"
+import { isKeyOf, pagingUtil } from "../../common/helpers"
 import { usersQueryRepo } from "./usersQueryRepo"
 import { exampleUserDocument, UserInputModel, UserSearchParams, UserViewModel } from "./userModels"
 import { ObjectId } from "mongodb"
+import { resultHelpers } from "../../common/result/helpers"
 
 export const usersRouter = express.Router()
 
 const usersController = {
     async getUsers(req: Request, res: Response<Paginator<UserViewModel>>) {
 
-        const pagingParams: PagingParams<UserViewModel> = {
-            sortBy: isKeyOf(req.query.sortBy, exampleUserDocument)
-                ? req.query.sortBy
-                : "createdAt",
-            sortDirection: req.query.sortDirection === "asc" ? "asc" : "desc",
-            pageNumber: !!req.query.pageNumber && Number(req.query.pageNumber) > 0 ? Number(req.query.pageNumber) : 1,
-            pageSize: !!req.query.pageSize && Number(req.query.pageSize) > 0 ? Number(req.query.pageSize) : 10,
-        }
+        const pagingParams = pagingUtil<UserViewModel>(req.query, exampleUserDocument)
 
         const searchParams: UserSearchParams = {
             searchLoginTerm: typeof req.query.searchLoginTerm === "string" ? req.query.searchLoginTerm : null,
@@ -30,59 +24,49 @@ const usersController = {
         }
 
         const result = await usersQueryRepo.getUsersWithPagingAndFilter(searchParams, pagingParams)
-        res.status(HttpStatusCodes.OK).json(result)
+        res.status(HttpStatus.OK).json(result)
     },
 
     async createUser(req: RequestWithBody<UserInputModel>, res: Response<UserViewModel | ApiErrorType>) {
         const result = await usersService.createUser(req.body)
 
-        if (result.status === "error") {
-            const requestMessage: ApiErrorType = {
-                errorsMessages: [
-                    {
-                        message: result.message!,
-                        field: result.field!,
-                    },
-                ],
-            }
-            res.status(HttpStatusCodes.BadRequest).json(requestMessage)
+        if (!resultHelpers.isSuccess(result)) {
+            res.status(resultHelpers.resultCodeToHttpException(result.status)).json({ errorsMessages: result.extensions })
             return
         }
 
-        if (result.status === "success") {
-            const createdUser = await usersQueryRepo.getUserById(result.createdUserId!)
-            res.status(HttpStatusCodes.Created).json(createdUser!)
-        }
+        const createdUser = await usersQueryRepo.getUserById(result.data.createdUserId!)
+        res.status(HttpStatus.Created).json(createdUser!)
     },
 
     async deleteUser(req: RequestWithParams<{ id: string }>, res: Response) {
         if (!ObjectId.isValid(req.params.id)) {
-            res.sendStatus(HttpStatusCodes.NotFound)
+            res.sendStatus(HttpStatus.NotFound)
             return
         }
-        
+
         const deletedUser = await usersService.deleteUser(req.params.id)
         if (!deletedUser) {
-            res.sendStatus(HttpStatusCodes.NotFound)
+            res.sendStatus(HttpStatus.NotFound)
             return
         }
-        res.sendStatus(HttpStatusCodes.NoContent)
+        res.sendStatus(HttpStatus.NoContent)
     },
 }
 
 usersRouter.get("/",
-    authMiddleware,
+    basicAuthMiddleware,
     usersController.getUsers,
 )
 
 usersRouter.post("/",
-    authMiddleware,
+    basicAuthMiddleware,
     ...userValidators,
     handleErrorsMiddleware,
     usersController.createUser,
 )
 
 usersRouter.delete("/:id",
-    authMiddleware,
+    basicAuthMiddleware,
     usersController.deleteUser,
 )

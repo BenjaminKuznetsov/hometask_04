@@ -6,6 +6,10 @@ export type UserDBModel = {
     createdAt: string
 }
 
+export type TUserWithId = UserDBModel & {
+    id: string
+}
+
 export type UserDBFilter = {
     login?: string
     email?: string
@@ -16,6 +20,12 @@ export type UserViewModel = {
     login: string
     email: string
     createdAt: string
+}
+
+export type MeViewModel = {
+    userId: string
+    login: string
+    email: string
 }
 
 export const exampleUserDocument = {

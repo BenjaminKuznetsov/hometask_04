@@ -1,7 +1,7 @@
 import { PostDBModel, PostSearchParams, PostViewModel } from "./postModels"
 import { postsCollection } from "../../db/mongo"
 import { ObjectId, WithId } from "mongodb"
-import { Paginator, PagingParams } from "../../types"
+import { Paginator, PagingParams } from "../../common/types/types"
 
 function postMapperToView(post: WithId<PostDBModel>): PostViewModel {
     return {

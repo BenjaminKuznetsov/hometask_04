@@ -1,6 +1,6 @@
 import { body, param, validationResult } from "express-validator"
 import { NextFunction, Request, Response } from "express"
-import { HttpStatusCodes } from "../../lib/httpStatusCodes"
+import { HttpStatus } from "../../common/httpStatus"
 
 export const nameValidator = body("name")
     .isString()
@@ -28,7 +28,7 @@ export const urlValidator = body("websiteUrl")
 export const handleNotFoundError = (req: Request, res: Response, next: NextFunction) => {
     const errors = validationResult(req).array({ onlyFirstError: true })
     if (errors.length > 0) {
-        res.sendStatus(HttpStatusCodes.NotFound)
+        res.sendStatus(HttpStatus.NotFound)
         return
     }
     next()

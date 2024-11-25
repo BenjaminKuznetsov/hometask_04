@@ -1,15 +1,21 @@
 import express, { Request, Response } from "express"
 import { blogsService } from "./blogsService"
 import { BlogInputModel, BlogSearchParams, BlogViewModel, exampleBlogDocument } from "./blogModels"
-import { Paginator, PagingParams, RequestWithBody, RequestWithParams, RequestWithParamsAndBody } from "../../types"
-import { authMiddleware } from "../../middleware/auth"
+import {
+    Paginator,
+    PagingParams,
+    RequestWithBody,
+    RequestWithParams,
+    RequestWithParamsAndBody,
+} from "../../common/types/types"
+import { basicAuthMiddleware } from "../../common/middleware/basic-auth"
 import { blogValidators, handleNotFoundError } from "./blogValidators"
-import { HttpStatusCodes } from "../../lib/httpStatusCodes"
-import { handleErrorsMiddleware } from "../../middleware/handleErrors"
+import { HttpStatus } from "../../common/httpStatus"
+import { handleErrorsMiddleware } from "../../common/middleware/handleErrors"
 import { postValidators } from "../posts/postValidators"
 import { examplePostDocument, PostInputModel, PostSearchParams, PostViewModel } from "../posts/postModels"
 import { BlogNotFoundError, postsService } from "../posts/postsService"
-import { isKeyOf } from "../../lib/helpers"
+import { isKeyOf, pagingUtil } from "../../common/helpers"
 import { blogsQueryRepo } from "./blogsQueryRepo"
 import { postsQueryRepo } from "../posts/postsQueryRepo"
 import { blogsRepository } from "./blogsRepository"
@@ -23,47 +29,40 @@ const blogsController = {
         // console.log(req.params)
         // console.log("req.query", req.query)
 
-        const pagingParams: PagingParams<BlogViewModel> = {
-            sortBy: isKeyOf(req.query.sortBy, exampleBlogDocument)
-                ? req.query.sortBy
-                : "createdAt",
-            sortDirection: req.query.sortDirection === "asc" ? "asc" : "desc",
-            pageNumber: !!req.query.pageNumber && Number(req.query.pageNumber) > 0 ? Number(req.query.pageNumber) : 1,
-            pageSize: !!req.query.pageSize && Number(req.query.pageSize) > 0 ? Number(req.query.pageSize) : 10,
-        }
+        const pagingParams = pagingUtil<BlogViewModel>(req.query, exampleBlogDocument)
 
         const searchParams: BlogSearchParams = {
             searchNameTerm: typeof req.query.searchNameTerm === "string" ? req.query.searchNameTerm : null,
         }
 
         const result = await blogsQueryRepo.getBlogsWithPagingAndFilter(searchParams, pagingParams)
-        res.status(HttpStatusCodes.OK).json(result)
+        res.status(HttpStatus.OK).json(result)
     },
     async getBlogById(req: RequestWithParams<{ id: string }>, res: Response<BlogViewModel>) {
 
         if (!ObjectId.isValid(req.params.id)) {
-            res.sendStatus(HttpStatusCodes.NotFound)
+            res.sendStatus(HttpStatus.NotFound)
             return
         }
 
         const foundBlog = await blogsQueryRepo.getBlogById(req.params.id)
         if (!foundBlog) {
-            res.sendStatus(HttpStatusCodes.NotFound)
+            res.sendStatus(HttpStatus.NotFound)
         } else {
-            res.status(HttpStatusCodes.OK).json(foundBlog)
+            res.status(HttpStatus.OK).json(foundBlog)
         }
     },
 
     async getPostsByBlogId(req: Request, res: Response<Paginator<PostViewModel>>) {
 
         if (!ObjectId.isValid(req.params.blogId)) {
-            res.sendStatus(HttpStatusCodes.NotFound)
+            res.sendStatus(HttpStatus.NotFound)
             return
         }
 
         const existingBlog = await blogsRepository.getBlogById(req.params.blogId)
         if (!existingBlog) {
-            res.sendStatus(HttpStatusCodes.NotFound)
+            res.sendStatus(HttpStatus.NotFound)
             return
         }
 
@@ -71,23 +70,16 @@ const blogsController = {
             blogId: req.params.blogId,
         }
 
-        const pagingParams: PagingParams<PostViewModel> = {
-            sortBy: isKeyOf(req.query.sortBy, examplePostDocument)
-                ? req.query.sortBy
-                : "createdAt",
-            sortDirection: req.query.sortDirection === "asc" ? "asc" : "desc",
-            pageNumber: !!req.query.pageNumber && Number(req.query.pageNumber) > 0 ? Number(req.query.pageNumber) : 1,
-            pageSize: !!req.query.pageSize && Number(req.query.pageSize) > 0 ? Number(req.query.pageSize) : 10,
-        }
+        const pagingParams = pagingUtil<PostViewModel>(req.query, examplePostDocument)
 
         const result = await postsQueryRepo.getPostsWithPagingAndFilter(searchParams, pagingParams)
-        res.status(HttpStatusCodes.OK).json(result)
+        res.status(HttpStatus.OK).json(result)
     },
 
     async createBlog(req: RequestWithBody<BlogInputModel>, res: Response<BlogViewModel>) {
         const createdBlogId = await blogsService.createBlog(req.body)
         const createdBlog = await blogsQueryRepo.getBlogById(createdBlogId)
-        res.status(HttpStatusCodes.Created).json(createdBlog!)
+        res.status(HttpStatus.Created).json(createdBlog!)
     },
 
     async createPost(req: Request, res: Response<PostViewModel>) {
@@ -98,10 +90,10 @@ const blogsController = {
         try {
             const createdPostId = await postsService.createPost(input)
             const createdPost = await postsQueryRepo.getPostById(createdPostId)
-            res.status(HttpStatusCodes.Created).json(createdPost!)
+            res.status(HttpStatus.Created).json(createdPost!)
         } catch (e: any) {
             if (e instanceof BlogNotFoundError) {
-                res.sendStatus(HttpStatusCodes.NotFound)
+                res.sendStatus(HttpStatus.NotFound)
                 return
             }
             throw e
@@ -114,18 +106,18 @@ const blogsController = {
     ) {
         const updatedBlog = await blogsService.updateBlog(req.params.id, req.body)
         if (!updatedBlog) {
-            res.sendStatus(HttpStatusCodes.NotFound)
+            res.sendStatus(HttpStatus.NotFound)
             return
         }
-        res.sendStatus(HttpStatusCodes.NoContent)
+        res.sendStatus(HttpStatus.NoContent)
     },
     async deleteBlog(req: RequestWithParams<{ id: string }>, res: Response) {
         const deletedBlog = await blogsService.deleteBlog(req.params.id)
         if (!deletedBlog) {
-            res.sendStatus(HttpStatusCodes.NotFound)
+            res.sendStatus(HttpStatus.NotFound)
             return
         }
-        res.sendStatus(HttpStatusCodes.NoContent)
+        res.sendStatus(HttpStatus.NoContent)
     },
 }
 
@@ -138,14 +130,14 @@ blogsRouter.get("/:blogId/posts/",
     blogsController.getPostsByBlogId)
 
 blogsRouter.post("/",
-    authMiddleware,
+    basicAuthMiddleware,
     ...blogValidators,
     handleErrorsMiddleware,
     blogsController.createBlog,
 )
 
 blogsRouter.post("/:blogId/posts/",
-    authMiddleware,
+    basicAuthMiddleware,
     handleNotFoundError,
     ...postValidators,
     handleErrorsMiddleware,
@@ -153,13 +145,13 @@ blogsRouter.post("/:blogId/posts/",
 )
 
 blogsRouter.put("/:id",
-    authMiddleware,
+    basicAuthMiddleware,
     ...blogValidators,
     handleErrorsMiddleware,
     blogsController.updateBlog,
 )
 
 blogsRouter.delete("/:id",
-    authMiddleware,
+    basicAuthMiddleware,
     blogsController.deleteBlog,
 )

@@ -1,10 +1,11 @@
 import dotenv from "dotenv"
 import { app } from "./app"
 import { runDb } from "./db/mongo"
+import { appConfig } from "./common/config/config"
 
 dotenv.config()
 
-const port = process.env.PORT || 3000
+const port = appConfig.port
 
 app.listen(port, async () => {
     const success = await runDb()

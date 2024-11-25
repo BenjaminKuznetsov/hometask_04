@@ -8,44 +8,43 @@ import {
     RequestWithBody,
     RequestWithParams,
     RequestWithParamsAndBody,
-} from "../../types"
-import { authMiddleware } from "../../middleware/auth"
+} from "../../common/types/types"
+import { basicAuthMiddleware } from "../../common/middleware/basic-auth"
 import { blogIdMongoValidator, blogIdValidator, postValidators } from "./postValidators"
-import { HttpStatusCodes } from "../../lib/httpStatusCodes"
-import { handleErrorsMiddleware } from "../../middleware/handleErrors"
-import { isKeyOf } from "../../lib/helpers"
+import { HttpStatus } from "../../common/httpStatus"
+import { handleErrorsMiddleware } from "../../common/middleware/handleErrors"
+import { isKeyOf, pagingUtil } from "../../common/helpers"
 import { postsQueryRepo } from "./postsQueryRepo"
 import { ObjectId } from "mongodb"
+import { bearerAuthMiddleware } from "../../common/middleware/bearer-auth"
+import { commentContentValidator } from "../comments/comments.validators"
+import { commentsService } from "../comments/comments.service"
+import { resultHelpers } from "../../common/result/helpers"
+import { commentsQueryRepo } from "../comments/comments.queryRepo"
+import { exampleCommentDocument, TCommentViewModel } from "../comments/comments.types"
 
 export const postsRouter = express.Router()
 
 const postsController = {
     async getPosts(req: Request, res: Response<Paginator<PostViewModel>>) {
 
-        const pagingParams: PagingParams<PostViewModel> = {
-            sortBy: isKeyOf(req.query.sortBy, examplePostDocument)
-                ? req.query.sortBy
-                : "createdAt",
-            sortDirection: req.query.sortDirection === "asc" ? "asc" : "desc",
-            pageNumber: !!req.query.pageNumber && Number(req.query.pageNumber) > 0 ? Number(req.query.pageNumber) : 1,
-            pageSize: !!req.query.pageSize && Number(req.query.pageSize) > 0 ? Number(req.query.pageSize) : 10,
-        }
+        const pagingParams = pagingUtil<PostViewModel>(req.query, examplePostDocument)
 
         const result = await postsQueryRepo.getPostsWithPagingAndFilter({}, pagingParams)
-        res.status(HttpStatusCodes.OK).json(result)
+        res.status(HttpStatus.OK).json(result)
     },
 
     async getPostById(req: RequestWithParams<{ id: string }>, res: Response<PostViewModel>) {
         if (!ObjectId.isValid(req.params.id)) {
-            res.sendStatus(HttpStatusCodes.NotFound)
+            res.sendStatus(HttpStatus.NotFound)
             return
         }
 
         const foundPost = await postsQueryRepo.getPostById(req.params.id)
         if (!foundPost) {
-            res.sendStatus(HttpStatusCodes.NotFound)
+            res.sendStatus(HttpStatus.NotFound)
         } else {
-            res.status(HttpStatusCodes.OK).json(foundPost)
+            res.status(HttpStatus.OK).json(foundPost)
         }
     },
 
@@ -54,10 +53,10 @@ const postsController = {
         try {
             const createdPostId = await postsService.createPost(req.body)
             const createdPost = await postsQueryRepo.getPostById(createdPostId)
-            res.status(HttpStatusCodes.Created).json(createdPost!)
+            res.status(HttpStatus.Created).json(createdPost!)
         } catch (e: any) {
             if (e instanceof BlogNotFoundError) {
-                res.status(HttpStatusCodes.BadRequest).json({
+                res.status(HttpStatus.BadRequest).json({
                     errorsMessages: [ {
                         message: e.message,
                         field: "blogId",
@@ -74,14 +73,14 @@ const postsController = {
         try {
             const updatedPost = await postsService.updatePost(req.params.id, req.body)
             if (!updatedPost) {
-                res.sendStatus(HttpStatusCodes.NotFound)
+                res.sendStatus(HttpStatus.NotFound)
                 return
             }
-            res.sendStatus(HttpStatusCodes.NoContent)
+            res.sendStatus(HttpStatus.NoContent)
 
         } catch (e: any) {
             if (e instanceof BlogNotFoundError) {
-                res.status(HttpStatusCodes.BadRequest).json({
+                res.status(HttpStatus.BadRequest).json({
                     errorsMessages: [ {
                         message: e.message,
                         field: "blogId",
@@ -95,10 +94,30 @@ const postsController = {
     async deletePost(req: RequestWithParams<{ id: string }>, res: Response) {
         const deletedPost = await postsService.deletePost(req.params.id)
         if (!deletedPost) {
-            res.sendStatus(HttpStatusCodes.NotFound)
+            res.sendStatus(HttpStatus.NotFound)
             return
         }
-        res.sendStatus(HttpStatusCodes.NoContent)
+        res.sendStatus(HttpStatus.NoContent)
+    },
+
+    async getComments(req: RequestWithParams<{ postId: string }>, res: Response) {
+        const pagingParams = pagingUtil<TCommentViewModel>(req.query, exampleCommentDocument)
+        const comments = await commentsQueryRepo.getCommentsByPostWithPaging(req.params.postId, pagingParams)
+        res.status(HttpStatus.OK).json(comments)
+    },
+
+    async createComment(req: RequestWithParams<{ postId: string }>, res: Response) {
+        const postId = req.params.postId
+        const userId = req.userId
+        const result = await commentsService.createComment(postId, userId!, req.body)
+
+        if (!resultHelpers.isSuccess(result)) {
+            res.status(resultHelpers.resultCodeToHttpException(result.status)).json({ errorsMessages: result.extensions })
+            return
+        }
+
+        const createdComment = await commentsQueryRepo.getCommentById(result.data!)
+        res.status(HttpStatus.Created).json(createdComment!)
     },
 }
 
@@ -106,8 +125,19 @@ postsRouter.get("/", postsController.getPosts)
 
 postsRouter.get("/:id", postsController.getPostById)
 
+postsRouter.get("/:postId/comments",
+    postsController.getComments,
+)
+
+postsRouter.post("/:postId/comments",
+    bearerAuthMiddleware,
+    commentContentValidator,
+    handleErrorsMiddleware,
+    postsController.createComment,
+)
+
 postsRouter.post("/",
-    authMiddleware,
+    basicAuthMiddleware,
     ...postValidators,
     blogIdValidator,
     blogIdMongoValidator,
@@ -116,7 +146,7 @@ postsRouter.post("/",
 )
 
 postsRouter.put("/:id",
-    authMiddleware,
+    basicAuthMiddleware,
     ...postValidators,
     blogIdValidator,
     blogIdMongoValidator,
@@ -124,4 +154,4 @@ postsRouter.put("/:id",
     postsController.updatePost,
 )
 
-postsRouter.delete("/:id", authMiddleware, postsController.deletePost)
+postsRouter.delete("/:id", basicAuthMiddleware, postsController.deletePost)
