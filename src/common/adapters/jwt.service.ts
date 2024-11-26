@@ -5,7 +5,7 @@ import { resultHelpers } from "../result/helpers"
 
 export const jwtService = {
     async createToken(userId: string): Promise<string> {
-        return jwt.sign({ userId }, appConfig.jwtSecret, { expiresIn: "10m" })
+        return jwt.sign({ userId }, appConfig.jwtSecret, { expiresIn: "1h" })
     },
     async decodeToken(token: string): Promise<JwtPayload | string | null> {
         return jwt.decode(token)

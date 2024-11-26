@@ -303,5 +303,12 @@ describe("comments", () => {
                 .expect(HttpStatus.NotFound)
 
         })
+
+        it("should return NotFound trying to delete non-existent comment", async () => {
+            await request(app)
+                .delete(`${paths.comments}/${new ObjectId().toString()}`)
+                .set("Authorization", `Bearer ${users[1].accessToken}`)
+                .expect(HttpStatus.NotFound)
+        })
     })
 })

@@ -27,6 +27,8 @@ commentsRouter
 
     .put("/:id",
         bearerAuthMiddleware,
+        commentContentValidator,
+        handleErrorsMiddleware,
         async (req: RequestWithParamsAndBody<{ id: string }, TCommentInput>, res: Response<ApiErrorType | null>) => {
             const id = req.params.id
             const input = req.body
@@ -45,8 +47,6 @@ commentsRouter
 
     .delete("/:id",
         bearerAuthMiddleware,
-        commentContentValidator,
-        handleErrorsMiddleware,
         async (req: RequestWithParams<{ id: string }>, res: Response) => {
             const id = req.params.id
             const userId = req.userId
