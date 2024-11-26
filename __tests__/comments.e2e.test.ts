@@ -74,7 +74,7 @@ describe("comments", () => {
 
         it("shouldn't not create too long comment", async () => {
             const longComment: TCommentInput = {
-                content: generateText(3003),
+                content: generateText(303),
             }
             await request(app)
                 .post(`${paths.posts}/${posts[0].id}/comments`)
@@ -127,7 +127,7 @@ describe("comments", () => {
 
     })
 
-    describe("test with two posts", () => {
+    describe("test with three posts", () => {
         const createdCommentsPost1: TCommentViewModel[] = []
         const createdCommentsPost2: TCommentViewModel[] = []
 
@@ -135,7 +135,7 @@ describe("comments", () => {
 
             for (let i = 0; i < 7; i++) {
                 const comment: TCommentInput = {
-                    content: generateText(_.random(20, 3000)),
+                    content: generateText(_.random(20, 303)),
                 }
                 const req = await request(app)
                     .post(`${paths.posts}/${posts[1].id}/comments`)
@@ -148,7 +148,7 @@ describe("comments", () => {
 
             for (let i = 0; i < 13; i++) {
                 const comment: TCommentInput = {
-                    content: generateText(_.random(20, 3000)),
+                    content: generateText(_.random(20, 303)),
                 }
                 const req = await request(app)
                     .post(`${paths.posts}/${posts[2].id}/comments`)
@@ -207,6 +207,11 @@ describe("comments", () => {
             })
         })
 
+        it("should return NotFound for invalid post id", async () => {
+            await request(app)
+                .get(`${paths.posts}/${new ObjectId().toString()}/comments`)
+                .expect(HttpStatus.NotFound)
+        })
     })
 
     describe("get, put and delete comment", () => {

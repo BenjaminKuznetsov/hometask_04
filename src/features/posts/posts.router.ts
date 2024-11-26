@@ -22,6 +22,7 @@ import { commentsService } from "../comments/comments.service"
 import { resultHelpers } from "../../common/result/helpers"
 import { commentsQueryRepo } from "../comments/comments.queryRepo"
 import { exampleCommentDocument, TCommentViewModel } from "../comments/comments.types"
+import { postsRepository } from "./postsRepository"
 
 export const postsRouter = express.Router()
 
@@ -102,6 +103,13 @@ const postsController = {
 
     async getComments(req: RequestWithParams<{ postId: string }>, res: Response) {
         const pagingParams = pagingUtil<TCommentViewModel>(req.query, exampleCommentDocument)
+
+        const postDoesntExist = await postsRepository.doesExistById(req.params.postId)
+        if (!postDoesntExist) {
+            res.sendStatus(HttpStatus.NotFound)
+            return
+        }
+
         const comments = await commentsQueryRepo.getCommentsByPostWithPaging(req.params.postId, pagingParams)
         res.status(HttpStatus.OK).json(comments)
     },
