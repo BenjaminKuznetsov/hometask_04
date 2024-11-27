@@ -28,7 +28,7 @@ const usersController = {
     },
 
     async createUser(req: RequestWithBody<UserInputModel>, res: Response<UserViewModel | ApiErrorType>) {
-        const result = await usersService.createUser(req.body)
+        const result = await usersService.createUser(req.body, true)
 
         if (!resultHelpers.isSuccess(result)) {
             res.status(resultHelpers.resultCodeToHttpException(result.status)).json({ errorsMessages: result.extensions })

@@ -11,40 +11,45 @@ export const resultHelpers = {
         }
     },
 
-    badRequest(data: FieldErrorType): ResultType {
+    badRequest(extension: FieldErrorType): ResultType {
         return {
             status: ResultStatus.BadRequest,
-            extensions: [ data ],
+            extensions: [ extension ],
             data: null,
         }
     },
 
-    notFound(data?: FieldErrorType): ResultType {
+    notFound(extension?: FieldErrorType): ResultType {
         return {
             status: ResultStatus.NotFound,
-            extensions: data ? [ data ] : [],
+            extensions: extension ? [ extension ] : [],
             data: null,
         }
     },
 
-    unauthorized(data?: FieldErrorType): ResultType {
+    unauthorized(extension?: FieldErrorType): ResultType {
         return {
             status: ResultStatus.Unauthorized,
-            extensions: data ? [ data ] : [],
+            extensions: extension ? [ extension ] : [],
             data: null,
         }
     },
 
-    forbidden(data?: FieldErrorType): ResultType {
+    forbidden(extension?: FieldErrorType): ResultType {
         return {
             status: ResultStatus.Forbidden,
-            extensions: data ? [ data ] : [],
+            extensions: extension ? [ extension ] : [],
             data: null,
         }
     },
 
     isSuccess<T>(result: ResultType<T | null>): result is ResultType<T> {
         return result.status === ResultStatus.Success
+    },
+
+    isNotSuccess<T>(result: ResultType<T | null>): result is ResultType {
+        return !result.data && result.status !== ResultStatus.Success
+
     },
 
     resultCodeToHttpException(resultCode: ResultStatus): HttpStatus {

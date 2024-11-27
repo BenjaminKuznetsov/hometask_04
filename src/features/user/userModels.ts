@@ -4,6 +4,19 @@ export type UserDBModel = {
     email: string
     passwordHash: string
     createdAt: string
+    emailConfirmation: TEmailConfirmation
+}
+
+export type TEmailConfirmation = {
+    confirmationCode?: string // not required if created by admin
+    expirationDate?: Date // not required if created by admin
+    confirmationStatus: ConfirmationStatus
+}
+
+export enum ConfirmationStatus {
+    CREATED_BY_ADMIN = 0,
+    NOT_CONFIRMED = 1,
+    CONFIRMED = 2,
 }
 
 export type TUserWithId = UserDBModel & {

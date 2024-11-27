@@ -1,12 +1,16 @@
-import { UserDBModel, UserInputModel } from "./userModels"
+import { UserDBModel, UserInputModel, ConfirmationStatus, TEmailConfirmation } from "./userModels"
 import { usersRepo } from "./usersRepo"
 import { ResultType } from "../../common/result/result.type"
 import { resultHelpers } from "../../common/result/helpers"
 import { bcryptService } from "../../common/adapters/bcrypt.service"
+import { v4 as uuidv4 } from "uuid"
+import { add } from "date-fns"
 
 export const usersService = {
 
-    async createUser(input: UserInputModel): Promise<ResultType<{ createdUserId: string } | null>> {
+    async createUser(input: UserInputModel, isCreatedByAdmin: boolean = false): Promise<ResultType<{
+        createdUserId: string
+    } | null>> {
         const userWithSuchLogin = await usersRepo.getUserByFilter({ login: input.login })
         if (userWithSuchLogin) {
             return resultHelpers.badRequest({ field: "login", message: "User with such login already exists" })
@@ -19,11 +23,23 @@ export const usersService = {
 
         const passwordHash = await bcryptService.generateHash(input.password)
 
+        const emailConfirmation: TEmailConfirmation = isCreatedByAdmin ?
+            { confirmationStatus: ConfirmationStatus.CREATED_BY_ADMIN } :
+            {
+                confirmationStatus: ConfirmationStatus.NOT_CONFIRMED,
+                confirmationCode: uuidv4(),
+                expirationDate: add(new Date(), {
+                    hours: 1,
+                    minutes: 30,
+                }),
+            }
+
         const newUser: UserDBModel = {
             login: input.login,
             email: input.email,
             passwordHash: passwordHash,
             createdAt: new Date().toISOString(),
+            emailConfirmation,
         }
         const newUserId = await usersRepo.createUser(newUser)
 
