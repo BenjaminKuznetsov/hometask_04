@@ -1,9 +1,9 @@
 import request from "supertest"
-import { app } from "../src/app"
-import { paths } from "../src/common/paths"
-import { HttpStatus } from "../src/common/httpStatus"
-import { runTestDb } from "../src/db/mongo"
-import { CreatedUser, seeder } from "./helpers/seeder"
+import { app } from "../../src/app"
+import { paths } from "../../src/common/paths"
+import { HttpStatus } from "../../src/common/httpStatus"
+import { runTestDb } from "../../src/db/mongo"
+import { CreatedUser, e2eSeeder } from "../helpers/seeders"
 import { MongoMemoryServer } from "mongodb-memory-server"
 import { MongoClient } from "mongodb"
 
@@ -32,7 +32,7 @@ describe("auth", () => {
         let user: CreatedUser
 
         beforeAll(async () => {
-            const users = await seeder.users(1)
+            const users = await e2eSeeder.users(1)
             user = users[0]
         })
 

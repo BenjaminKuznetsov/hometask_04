@@ -228,7 +228,7 @@ export const invalidPosts = [
     },
 ]
 
-export const users = [
+export const mockUsers = [
     {
         login: "JohnDoe",
         email: "johnan@john.com",

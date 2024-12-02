@@ -1,12 +1,12 @@
 import request from "supertest"
-import { app } from "../src/app"
-import { paths } from "../src/common/paths"
-import { HttpStatus } from "../src/common/httpStatus"
-import { users } from "./helpers/mock-data"
-import { encodeToBase64 } from "../src/common/helpers"
-import { runTestDb } from "../src/db/mongo"
-import { UserInputModel } from "../src/features/user/userModels"
-import { appConfig } from "../src/common/config/config"
+import { app } from "../../src/app"
+import { paths } from "../../src/common/paths"
+import { HttpStatus } from "../../src/common/httpStatus"
+import { mockUsers } from "../helpers/mock-data"
+import { encodeToBase64 } from "../../src/common/helpers"
+import { runTestDb } from "../../src/db/mongo"
+import { UserInputModel } from "../../src/features/user/userModels"
+import { appConfig } from "../../src/common/config/config"
 import { MongoMemoryServer } from "mongodb-memory-server"
 import { MongoClient } from "mongodb"
 
@@ -35,12 +35,12 @@ describe("users", () => {
 
     it("shouldn't accept unauthenticated requests", async () => {
 
-        await request(app).post(paths.users).send(users[0]).expect(HttpStatus.Unauthorized)
+        await request(app).post(paths.users).send(mockUsers[0]).expect(HttpStatus.Unauthorized)
 
         await request(app)
             .post(paths.users)
             .set("Authorization", `Basic qwerty:qwerty`)
-            .send(users[0])
+            .send(mockUsers[0])
             .expect(HttpStatus.Unauthorized)
     })
 
@@ -145,7 +145,7 @@ describe("users", () => {
 
     it("should return users with paging and sorting", async () => {
 
-        for (const user of users) {
+        for (const user of mockUsers) {
             const res = await request(app)
                 .post(paths.users)
                 .set("Authorization", `Basic ${encodeToBase64(appConfig.adminAuth)}`)
@@ -260,7 +260,7 @@ describe("users", () => {
     it("should delete  user with correct id and shouldn't delete user with non-existent id", async () => {
         const ids = []
 
-        for (const user of users) {
+        for (const user of mockUsers) {
             const res = await request(app)
                 .post(paths.users)
                 .set("Authorization", `Basic ${encodeToBase64(appConfig.adminAuth)}`)

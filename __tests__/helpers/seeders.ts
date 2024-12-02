@@ -2,7 +2,7 @@ import request from "supertest"
 import { app } from "../../src/app"
 import { paths } from "../../src/common/paths"
 import { encodeToBase64 } from "../../src/common/helpers"
-import { users, validBlogs, validPosts } from "./mock-data"
+import { mockUsers, validBlogs, validPosts } from "./mock-data"
 import { HttpStatus } from "../../src/common/httpStatus"
 import { appConfig } from "../../src/common/config/config"
 import { BlogViewModel } from "../../src/features/blog/blogModels"
@@ -17,13 +17,13 @@ export type CreatedUser = {
     accessToken?: string
 }
 
-export const seeder = {
+export const e2eSeeder = {
     async users(count: number): Promise<CreatedUser[]> {
         const createdUsers: CreatedUser[] = []
 
         for (let i = 0; i < count; i++) {
 
-            const user = users[i]
+            const user = mockUsers[i]
 
             if (!user) break
 
@@ -148,3 +148,5 @@ export const seeder = {
         return createdPosts
     },
 }
+
+export const integrationSeeder = {}

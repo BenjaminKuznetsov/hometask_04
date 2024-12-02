@@ -1,12 +1,12 @@
 import request from "supertest"
-import { app } from "../src/app"
-import { paths } from "../src/common/paths"
-import { HttpStatus } from "../src/common/httpStatus"
-import { runTestDb } from "../src/db/mongo"
-import { CreatedUser, seeder } from "./helpers/seeder"
-import { PostViewModel } from "../src/features/posts/postModels"
-import { TCommentInput, TCommentViewModel } from "../src/features/comments/comments.types"
-import { generateText } from "./helpers/utils"
+import { app } from "../../src/app"
+import { paths } from "../../src/common/paths"
+import { HttpStatus } from "../../src/common/httpStatus"
+import { runTestDb } from "../../src/db/mongo"
+import { CreatedUser, e2eSeeder } from "../helpers/seeders"
+import { PostViewModel } from "../../src/features/posts/postModels"
+import { TCommentInput, TCommentViewModel } from "../../src/features/comments/comments.types"
+import { generateText } from "../helpers/utils"
 import { MongoClient, ObjectId } from "mongodb"
 import _ from "lodash"
 import { MongoMemoryServer } from "mongodb-memory-server"
@@ -23,8 +23,8 @@ describe("comments", () => {
         mongoServer = server
         mongoClient = client
 
-        posts = await seeder.posts(4)
-        users = await seeder.users(2)
+        posts = await e2eSeeder.posts(4)
+        users = await e2eSeeder.users(2)
 
         const res1 = await request(app)
             .post(paths.auth.login)
