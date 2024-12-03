@@ -7,16 +7,20 @@ export const paths = {
     auth: {
         root: "/api/auth",
         login: "/api/auth/login",
+        refresh: "/api/auth/refresh-token",
         register: "/api/auth/registration",
+        logout: "/api/auth/logout",
         registerConfirm: "/api/auth/registration-confirmation",
         registerEmailResend: "/api/auth/registration-email-resending",
         me: "/api/auth/me",
         subs: {
             login: "/login",
-            me: "/me",
+            refresh: "/refresh-token",
+            logout: "/logout",
             register: "/registration",
             registerConfirm: "/registration-confirmation",
             registerEmailResend: "/registration-email-resending",
+            me: "/me",
         },
     },
 

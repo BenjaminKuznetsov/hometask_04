@@ -4,8 +4,11 @@ import { ResultType } from "../result/result.type"
 import { resultHelpers } from "../result/helpers"
 
 export const jwtService = {
-    async createToken(userId: string): Promise<string> {
-        return jwt.sign({ userId }, appConfig.jwtSecret, { expiresIn: "1h" })
+    async createAccessToken(userId: string): Promise<string> {
+        return jwt.sign({ userId }, appConfig.jwtSecret, { expiresIn: appConfig.accessTokenExp })
+    },
+    async createRefreshToken(userId: string): Promise<string> {
+        return jwt.sign({ userId }, appConfig.jwtSecret, { expiresIn: appConfig.refreshTokenExp })
     },
     async decodeToken(token: string): Promise<JwtPayload | string | null> {
         return jwt.decode(token)

@@ -11,6 +11,8 @@ import { MeViewModel, UserInputModel } from "../user/userModels"
 import { bearerAuthMiddleware } from "../../common/middleware/bearer-auth"
 import { paths } from "../../common/paths"
 import { emailValidator, userValidators } from "../user/userValidators"
+import { appConfig } from "../../common/config/config"
+import { refreshTokenMiddleware } from "./auth.middlewares"
 
 export const authRouter = Router()
 
@@ -37,7 +39,40 @@ authRouter
                 return
             }
 
+            res.cookie("refreshToken", result.data.refreshToken, { httpOnly: true, secure: true })
             res.status(HttpStatus.OK).json(result.data)
+        })
+
+    .post(paths.auth.subs.refresh,
+        refreshTokenMiddleware,
+        async (req: Request, res: Response<{ "accessToken": string }>) => {
+            const refreshToken: string = req.cookies.refreshToken
+
+            const result = await authService.refreshUserTokens(refreshToken)
+
+            if (!resultHelpers.isSuccess(result)) {
+                res.sendStatus(resultHelpers.resultCodeToHttpException(result.status))
+                return
+            }
+
+            res.cookie(appConfig.cookieNames.refreshToken, result.data.refreshToken, { httpOnly: true, secure: true })
+            res.status(HttpStatus.OK).json({ accessToken: result.data.accessToken })
+        })
+
+    .post(paths.auth.subs.logout,
+        refreshTokenMiddleware,
+        async (req: Request, res: Response) => {
+            const refreshToken: string = req.cookies.refreshToken
+
+            const result = await authService.logOutUser(refreshToken)
+
+            if (!resultHelpers.isSuccess(result)) {
+                res.sendStatus(resultHelpers.resultCodeToHttpException(result.status))
+                return
+            }
+
+            res.clearCookie(appConfig.cookieNames.refreshToken)
+            res.sendStatus(HttpStatus.NoContent)
         })
 
     .post(paths.auth.subs.register,
@@ -85,15 +120,3 @@ authRouter
 
             res.sendStatus(HttpStatus.NoContent)
         })
-
-// .post("/testEmail", (req, res) => {
-//
-//     emailAdapter.sendEmail({
-//         to: req.body.to,
-//         subject: req.body.subject,
-//         html: req.body.html,
-//     })
-//     res.sendStatus(200)
-// })
-
-

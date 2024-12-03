@@ -36,7 +36,7 @@ export const usersRepo = {
         return foundUser ? removeObjectId(foundUser) : null
     },
 
-    async getUserByLoginOrEmailAndHash(loginOrEmail: string): Promise<TUserWithId | null> {
+    async getUserByLoginOrEmail(loginOrEmail: string): Promise<TUserWithId | null> {
         let foundUser
         if (loginOrEmail.includes("@")) {
             foundUser = await usersCollection.findOne({ email: loginOrEmail })

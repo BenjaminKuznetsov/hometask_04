@@ -5,11 +5,13 @@ import { MongoMemoryServer } from "mongodb-memory-server"
 import { UserDBModel } from "../features/user/userModels"
 import { appConfig } from "../common/config/config"
 import { TCommentDB } from "../features/comments/comments.types"
+import { TInvalidTokens } from "../features/auth/auth.models"
 
 export let blogsCollection: Collection<BlogDBModel>
 export let postsCollection: Collection<PostDBModel>
 export let usersCollection: Collection<UserDBModel>
 export let commentsCollection: Collection<TCommentDB>
+export let invalidTokensCollection: Collection<TInvalidTokens>
 
 export async function runDb() {
     const mongoUrl = appConfig.mongoUrl
@@ -22,6 +24,7 @@ export async function runDb() {
     postsCollection = db.collection<PostDBModel>("posts")
     usersCollection = db.collection<UserDBModel>("users")
     commentsCollection = db.collection<TCommentDB>("comments")
+    invalidTokensCollection = db.collection<TInvalidTokens>("invalidTokens")
 
     try {
         await client.connect()
@@ -45,6 +48,7 @@ export async function runTestDb() {
     postsCollection = db.collection<PostDBModel>("posts")
     usersCollection = db.collection<UserDBModel>("users")
     commentsCollection = db.collection<TCommentDB>("comments")
+    invalidTokensCollection = db.collection<TInvalidTokens>("invalidTokens")
 
     return {
         server,
