@@ -13,6 +13,7 @@ import { paths } from "../../common/paths"
 import { emailValidator, userValidators } from "../user/userValidators"
 import { appConfig } from "../../common/config/config"
 import { refreshTokenMiddleware } from "./auth.middlewares"
+import { add } from "date-fns"
 
 export const authRouter = Router()
 
@@ -39,7 +40,14 @@ authRouter
                 return
             }
 
-            res.cookie("refreshToken", result.data.refreshToken, { httpOnly: true, secure: true })
+            res.cookie(appConfig.cookieNames.refreshToken, result.data.refreshToken, { httpOnly: true, secure: true })
+            // res.cookie(appConfig.cookieNames.refreshToken, result.data.refreshToken, {
+            //     httpOnly: true,
+            //     secure: true,
+            //     path: "/",
+            //     domain: "localhost",
+            //     expires: new Date(add(new Date(), { seconds: parseInt(appConfig.refreshTokenExp) })),
+            // })
             res.status(HttpStatus.OK).json(result.data)
         })
 
@@ -56,6 +64,14 @@ authRouter
             }
 
             res.cookie(appConfig.cookieNames.refreshToken, result.data.refreshToken, { httpOnly: true, secure: true })
+
+            // res.cookie(appConfig.cookieNames.refreshToken, result.data.refreshToken, {
+            //     httpOnly: true,
+            //     secure: true,
+            //     path: "/",
+            //     domain: "localhost",
+            //     expires: new Date(add(new Date(), { seconds: parseInt(appConfig.refreshTokenExp) })),
+            // })
             res.status(HttpStatus.OK).json({ accessToken: result.data.accessToken })
         })
 
@@ -71,7 +87,7 @@ authRouter
                 return
             }
 
-            res.clearCookie(appConfig.cookieNames.refreshToken)
+            res.clearCookie(appConfig.cookieNames.refreshToken, {})
             res.sendStatus(HttpStatus.NoContent)
         })
 
