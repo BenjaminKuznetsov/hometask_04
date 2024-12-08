@@ -4,6 +4,7 @@ export const paths = {
     posts: "/api/posts",
     users: "/api/users",
     comments: "/api/comments",
+    sessions: "/api/security/devices",
     auth: {
         root: "/api/auth",
         login: "/api/auth/login",

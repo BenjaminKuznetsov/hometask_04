@@ -33,7 +33,12 @@ authRouter
         passwordValidator,
         handleErrorsMiddleware,
         async (req: RequestWithBody<AuthInput>, res: Response<{ "accessToken": string }>) => {
-            const result = await authService.loginUser(req.body.loginOrEmail, req.body.password)
+            const result = await authService.loginUser({
+                loginOrEmail: req.body.loginOrEmail,
+                password: req.body.password,
+                ip: req.ip,
+                userAgent: req.headers["user-agent"],
+            })
 
             if (!resultHelpers.isSuccess(result)) {
                 res.sendStatus(HttpStatus.Unauthorized)

@@ -43,6 +43,14 @@ export const resultHelpers = {
         }
     },
 
+    tooManyRequests(): ResultType {
+        return {
+            status: ResultStatus.TooManyRequests,
+            extensions: [],
+            data: null,
+        }
+    },
+
     isSuccess<T>(result: ResultType<T | null>): result is ResultType<T> {
         return result.status === ResultStatus.Success
     },
@@ -62,6 +70,8 @@ export const resultHelpers = {
                 return HttpStatus.NotFound
             case ResultStatus.Unauthorized:
                 return HttpStatus.Unauthorized
+            case ResultStatus.TooManyRequests:
+                return HttpStatus.TooManyRequests
             default:
                 return HttpStatus.InternalServerError
         }

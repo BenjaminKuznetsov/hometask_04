@@ -16,4 +16,8 @@ export const appConfig = {
     cookieNames: {
         refreshToken: "refreshToken",
     },
+    tooManyRequestsParams: {
+        count: 5, // не более 5 запросов
+        time: 10, // за 10 секунд
+    },
 }

@@ -6,7 +6,6 @@ import { HttpStatus } from "./common/httpStatus"
 import {
     blogsCollection,
     commentsCollection,
-    invalidTokensCollection,
     postsCollection,
     usersCollection,
 } from "./db/mongo"
@@ -14,16 +13,24 @@ import { usersRouter } from "./features/user/usersRouter"
 import { authRouter } from "./features/auth/auth.router"
 import { commentsRouter } from "./features/comments/comments.router"
 import cookieParser from "cookie-parser"
+import { bruteForceGuard } from "./common/middleware/bruteForceGuard"
+import { registrator } from "./common/middleware/registrator"
+import { sessionsRouter } from "./features/sessions/sessions.router"
 
 export const app = express()
 
+app.set("trust proxy", true)
+
 app.use(express.json())
 app.use(cookieParser())
+app.use(bruteForceGuard)
+app.use(registrator)
 
 app.use(paths.blogs, blogsRouter)
 app.use(paths.posts, postsRouter)
 app.use(paths.users, usersRouter)
 app.use(paths.auth.root, authRouter)
+app.use(paths.sessions, sessionsRouter)
 app.use(paths.comments, commentsRouter)
 
 app.get(paths.home, (req: Request, res: Response) => {
@@ -36,7 +43,6 @@ app.delete(paths.testing, async (req: Request, res: Response) => {
     await postsCollection.deleteMany()
     await usersCollection.deleteMany()
     await commentsCollection.deleteMany()
-    await invalidTokensCollection.deleteMany()
 
     res.sendStatus(HttpStatus.NoContent)
 })

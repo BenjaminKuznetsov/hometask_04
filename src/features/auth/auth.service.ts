@@ -8,8 +8,10 @@ import { usersService } from "../user/usersService"
 import { emailManager } from "../../common/managers/email.manager"
 import { v4 as uuidv4 } from "uuid"
 import { add } from "date-fns"
-import { authRepo } from "./auth.repo"
-import { TTokenPair } from "./auth.types"
+import { LoginUserDTO, TTokenPair } from "./auth.types"
+import { SessionsDBModel, SessionUpdateDTO } from "../sessions/sessions.types"
+import { JwtPayload } from "jsonwebtoken"
+import { sessionsRepo } from "../sessions/sessions.repo"
 
 export const authService = {
     async checkCredentials(loginOrEmail: string, password: string): Promise<ResultType<TUserWithId | null>> {
@@ -26,62 +28,81 @@ export const authService = {
 
         return resultHelpers.success(user)
     },
-    async loginUser(loginOrEmail: string, password: string): Promise<ResultType<TTokenPair | null>> {
+    async loginUser({ loginOrEmail, password, ip, userAgent }: LoginUserDTO): Promise<ResultType<TTokenPair | null>> {
         const result = await this.checkCredentials(loginOrEmail, password)
 
         if (!resultHelpers.isSuccess(result)) {
             return resultHelpers.unauthorized()
         }
 
-        const accessToken = await jwtService.createAccessToken(result.data.id)
-        const refreshToken = await jwtService.createRefreshToken(result.data.id)
+        const userId = result.data.id
+
+        const deviceId = uuidv4()
+
+        const accessToken = await jwtService.createAccessToken(userId)
+        const refreshToken = await jwtService.createRefreshToken(userId, deviceId)
+
+        const decodedRefreshToken = await jwtService.decodeToken(refreshToken) as JwtPayload
+
+        const newSession: SessionsDBModel = {
+            user_id: userId,
+            device_id: deviceId,
+            user_agent: userAgent,
+            ip: ip,
+            iat: new Date(decodedRefreshToken.iat!),
+            exp: new Date(decodedRefreshToken.exp!),
+        }
+
+        await sessionsRepo.createSession(newSession)
 
         return resultHelpers.success({ accessToken, refreshToken })
     },
 
     async refreshUserTokens(token: string): Promise<ResultType<TTokenPair | null>> {
 
-        const isTokenInvalid = await authRepo.checkIsTokenInvalid(token)
-        if (isTokenInvalid) {
-            return resultHelpers.unauthorized()
-        }
-
         const result = await jwtService.verifyToken(token)
         if (!resultHelpers.isSuccess(result)) {
             return resultHelpers.unauthorized()
         }
 
-        const doesUserExist = await usersRepo.doesExistById(result.data.userId)
-        if (!doesUserExist) {
+        const userId = result.data.userId
+        const deviceId = result.data.deviceId!
+
+        const doesSessionExist = await sessionsRepo.checkSessionDoesExists(userId, deviceId)
+        if (!doesSessionExist) {
             return resultHelpers.unauthorized()
         }
 
-        await authRepo.addInvalidToken(token)
+        const newAccessToken = await jwtService.createAccessToken(userId)
+        const newRefreshToken = await jwtService.createRefreshToken(userId, deviceId)
 
-        const newAccessToken = await jwtService.createAccessToken(result.data.userId)
-        const newRefreshToken = await jwtService.createRefreshToken(result.data.userId)
+        const decodedRefreshToken = await jwtService.decodeToken(newRefreshToken) as JwtPayload
+
+        const updateSessionDTO: SessionUpdateDTO = {
+            user_id: userId,
+            device_id: deviceId,
+            iat: new Date(decodedRefreshToken.iat!),
+            exp: new Date(decodedRefreshToken.exp!),
+        }
+
+        await sessionsRepo.updateSession(updateSessionDTO)
 
         return resultHelpers.success({ accessToken: newAccessToken, refreshToken: newRefreshToken })
     },
 
     async logOutUser(token: string): Promise<ResultType<true | null>> {
 
-        const isTokenInvalid = await authRepo.checkIsTokenInvalid(token)
-        if (isTokenInvalid) {
-            return resultHelpers.unauthorized()
-        }
-
         const result = await jwtService.verifyToken(token)
         if (!resultHelpers.isSuccess(result)) {
             return resultHelpers.unauthorized()
         }
 
-        const doesUserExist = await usersRepo.doesExistById(result.data.userId)
-        if (!doesUserExist) {
+        const doesSessionExist = await sessionsRepo.checkSessionDoesExists(result.data.userId, result.data.deviceId!)
+        if (!doesSessionExist) {
             return resultHelpers.unauthorized()
         }
 
-        await authRepo.addInvalidToken(token)
+        await sessionsRepo.deleteSession(result.data.userId, result.data.deviceId!)
 
         return resultHelpers.success(true)
     },
