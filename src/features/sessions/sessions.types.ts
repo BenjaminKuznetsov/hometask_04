@@ -3,15 +3,15 @@ export type SessionsDBModel = {
     device_id: string
     user_agent?: string
     ip?: string
-    iat: Date
-    exp: Date
+    iat: number
+    exp: number
 }
 
 export type SessionUpdateDTO = {
     user_id: string
     device_id: string
-    iat: Date
-    exp: Date
+    iat: number
+    exp: number
 }
 
 export type DeviceViewModel = {

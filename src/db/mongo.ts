@@ -24,25 +24,57 @@ function initCollections(db: Db) {
     sessionsCollection = db.collection<SessionsDBModel>("sessions")
 }
 
-export async function runDb() {
-    const mongoUrl = appConfig.mongoUrl
-    const dbName = appConfig.dbName
+export const db = {
+    client: {} as MongoClient,
 
-    const client = new MongoClient(mongoUrl)
-    const db = client.db(dbName)
+    getDbName(): Db {
+        return this.client.db(appConfig.dbName)
+    },
+    async run() {
+        try {
+            this.client = new MongoClient(appConfig.mongoUrl)
+            await this.client.connect()
+            await this.getDbName().command({ ping: 1 })
+            this.initCollections()
+            console.log("Connected successfully to mongo server")
+            return true
+        } catch (e: unknown) {
+            console.error("Can't connect to mongo server", e)
+            await this.client.close()
+            return false
+        }
+    },
 
-    initCollections(db)
+    async stop() {
+        await this.client.close()
+        console.log("Connection successful closed")
+    },
+    async drop() {
+        try {
+            //await this.getDbName().dropDatabase()
+            const collections = await this.getDbName().listCollections().toArray()
 
-    try {
-        await client.connect()
-        await db.command({ ping: 1 })
-        console.log("Successfully connected to MongoDB")
-        return true
-    } catch (error) {
-        console.error(error)
-        await client.close()
-        return false
-    }
+            for (const collection of collections) {
+                const collectionName = collection.name
+                await this.getDbName().collection(collectionName).deleteMany({})
+            }
+        } catch (e: unknown) {
+            console.error("Error in drop db:", e)
+            await this.stop()
+        }
+    },
+    initCollections() {
+        initCollections(this.getDbName())
+    },
+    // getCollections() {
+    //     return {
+    //         usersCollection: this.getDbName().collection<User>("users"),
+    //         //blogsCollection:
+    //
+    //         //...all collections
+    //     }
+    // },
+
 }
 
 export async function runTestDb() {

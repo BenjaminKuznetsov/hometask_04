@@ -35,3 +35,10 @@ export type PagingInput = {
     pageNumber?: unknown
     pageSize?: unknown
 }
+
+export type RefreshTokenPayload = {
+    userId: string
+    deviceId: string
+    iat: number
+    exp: number
+}

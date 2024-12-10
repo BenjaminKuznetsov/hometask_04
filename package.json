@@ -7,7 +7,8 @@
     "dev": "concurrently \"tsc -w\" \"nodemon dist/index.js\"",
     "watch": "tsc -w",
     "test": "jest --runInBand --detectOpenHandles",
-    "serve": "ssh -R 80:localhost:3000 serveo.net"
+    "serveo": "ssh -R 80:localhost:3000 serveo.net",
+    "ngrok": "ngrok http --domain=kitten-relaxed-kiwi.ngrok-free.app 3000"
   },
   "dependencies": {
     "@types/bcrypt": "^5.0.2",

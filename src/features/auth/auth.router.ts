@@ -53,7 +53,7 @@ authRouter
             //     domain: "localhost",
             //     expires: new Date(add(new Date(), { seconds: parseInt(appConfig.refreshTokenExp) })),
             // })
-            res.status(HttpStatus.OK).json(result.data)
+            res.status(HttpStatus.OK).json({ accessToken: result.data.accessToken })
         })
 
     .post(paths.auth.subs.refresh,

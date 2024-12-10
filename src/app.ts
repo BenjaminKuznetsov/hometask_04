@@ -3,12 +3,7 @@ import { blogsRouter } from "./features/blog/blogsRouter"
 import { postsRouter } from "./features/posts/posts.router"
 import { paths } from "./common/paths"
 import { HttpStatus } from "./common/httpStatus"
-import {
-    blogsCollection,
-    commentsCollection,
-    postsCollection,
-    usersCollection,
-} from "./db/mongo"
+import { db } from "./db/mongo"
 import { usersRouter } from "./features/user/usersRouter"
 import { authRouter } from "./features/auth/auth.router"
 import { commentsRouter } from "./features/comments/comments.router"
@@ -39,10 +34,6 @@ app.get(paths.home, (req: Request, res: Response) => {
 })
 
 app.delete(paths.testing, async (req: Request, res: Response) => {
-    await blogsCollection.deleteMany()
-    await postsCollection.deleteMany()
-    await usersCollection.deleteMany()
-    await commentsCollection.deleteMany()
-
+    await db.drop()
     res.sendStatus(HttpStatus.NoContent)
 })

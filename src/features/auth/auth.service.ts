@@ -10,8 +10,8 @@ import { v4 as uuidv4 } from "uuid"
 import { add } from "date-fns"
 import { LoginUserDTO, TTokenPair } from "./auth.types"
 import { SessionsDBModel, SessionUpdateDTO } from "../sessions/sessions.types"
-import { JwtPayload } from "jsonwebtoken"
 import { sessionsRepo } from "../sessions/sessions.repo"
+import { RefreshTokenPayload } from "../../common/types/types"
 
 export const authService = {
     async checkCredentials(loginOrEmail: string, password: string): Promise<ResultType<TUserWithId | null>> {
@@ -42,15 +42,16 @@ export const authService = {
         const accessToken = await jwtService.createAccessToken(userId)
         const refreshToken = await jwtService.createRefreshToken(userId, deviceId)
 
-        const decodedRefreshToken = await jwtService.decodeToken(refreshToken) as JwtPayload
+        const decodedRefreshToken = await jwtService.decodeToken(refreshToken) as RefreshTokenPayload
+        // console.log("decodedRefreshToken", decodedRefreshToken)
 
         const newSession: SessionsDBModel = {
             user_id: userId,
             device_id: deviceId,
             user_agent: userAgent,
             ip: ip,
-            iat: new Date(decodedRefreshToken.iat!),
-            exp: new Date(decodedRefreshToken.exp!),
+            iat: decodedRefreshToken.iat,
+            exp: decodedRefreshToken.exp,
         }
 
         await sessionsRepo.createSession(newSession)
@@ -68,7 +69,7 @@ export const authService = {
         const userId = result.data.userId
         const deviceId = result.data.deviceId!
 
-        const doesSessionExist = await sessionsRepo.checkSessionDoesExists(userId, deviceId)
+        const doesSessionExist = await sessionsRepo.doesSessionExists(result.data as RefreshTokenPayload)
         if (!doesSessionExist) {
             return resultHelpers.unauthorized()
         }
@@ -76,13 +77,14 @@ export const authService = {
         const newAccessToken = await jwtService.createAccessToken(userId)
         const newRefreshToken = await jwtService.createRefreshToken(userId, deviceId)
 
-        const decodedRefreshToken = await jwtService.decodeToken(newRefreshToken) as JwtPayload
+        const decodedRefreshToken = await jwtService.decodeToken(newRefreshToken) as RefreshTokenPayload
+        // console.log("decodedRefreshToken", decodedRefreshToken)
 
         const updateSessionDTO: SessionUpdateDTO = {
             user_id: userId,
             device_id: deviceId,
-            iat: new Date(decodedRefreshToken.iat!),
-            exp: new Date(decodedRefreshToken.exp!),
+            iat: decodedRefreshToken.iat,
+            exp: decodedRefreshToken.exp,
         }
 
         await sessionsRepo.updateSession(updateSessionDTO)
@@ -97,7 +99,7 @@ export const authService = {
             return resultHelpers.unauthorized()
         }
 
-        const doesSessionExist = await sessionsRepo.checkSessionDoesExists(result.data.userId, result.data.deviceId!)
+        const doesSessionExist = await sessionsRepo.doesSessionExists(result.data as RefreshTokenPayload)
         if (!doesSessionExist) {
             return resultHelpers.unauthorized()
         }
