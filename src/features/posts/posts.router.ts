@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express"
-import { examplePostDocument, PostInputModel, PostViewModel } from "./postModels"
+import { examplePostDocument, PostInputModel, PostViewModel } from "./post.model"
 import { BlogNotFoundError, postsService } from "./postsService"
 import {
     ApiErrorType,
@@ -21,7 +21,7 @@ import { commentContentValidator } from "../comments/comments.validators"
 import { commentsService } from "../comments/comments.service"
 import { resultHelpers } from "../../common/result/helpers"
 import { commentsQueryRepo } from "../comments/comments.queryRepo"
-import { exampleCommentDocument, TCommentViewModel } from "../comments/comments.types"
+import { exampleCommentDocument, TCommentViewModel } from "../comments/comments.model"
 import { postsRepository } from "./postsRepository"
 
 export const postsRouter = express.Router()

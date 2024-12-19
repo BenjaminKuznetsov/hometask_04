@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express"
 import { commentsQueryRepo } from "./comments.queryRepo"
-import { TCommentInput, TCommentViewModel } from "./comments.types"
+import { TCommentInput, TCommentViewModel } from "./comments.model"
 import { HttpStatus } from "../../common/httpStatus"
 import { ApiErrorType, RequestWithParams, RequestWithParamsAndBody } from "../../common/types/types"
 import { bearerAuthMiddleware } from "../../common/middleware/bearer-auth"

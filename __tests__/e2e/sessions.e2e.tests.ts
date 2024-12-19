@@ -1,13 +1,11 @@
-import { MongoMemoryServer } from "mongodb-memory-server"
-import { MongoClient } from "mongodb"
-import { db, runTestDb } from "../../src/db/mongo"
+import { db } from "../../src/db/mongo"
 import request from "supertest"
 import { app } from "../../src/app"
 import { paths } from "../../src/common/paths"
 import { HttpStatus } from "../../src/common/httpStatus"
 import { jwtService } from "../../src/common/adapters/jwt.service"
 import { JwtPayload } from "jsonwebtoken"
-import { DeviceViewModel } from "../../src/features/sessions/sessions.types"
+import { DeviceViewModel } from "../../src/features/sessions/sessions.model"
 
 const mockUsers = [
     {
@@ -42,28 +40,17 @@ const getTokenFromCookie = (cookie: string) => {
 }
 
 describe("sessions", () => {
-    let mongoServer: MongoMemoryServer
-    let mongoClient: MongoClient
 
     const firstUserDevices: AccessData[] = []
     let devices1: DeviceViewModel[]
 
     beforeAll(async () => {
-        const { server, client } = await runTestDb()
-        mongoServer = server
-        mongoClient = client
-        // await db.run()
-        // await db.drop()
+        await db.run()
+        await db.drop()
     })
 
     afterAll(async () => {
-        if (mongoClient) {
-            await mongoClient.close()
-        }
-        if (mongoServer) {
-            await mongoServer.stop()
-        }
-        // await db.stop()
+        await db.stop()
     })
 
     it("should register 2 users", async () => {
@@ -126,6 +113,9 @@ describe("sessions", () => {
     // })
 
     it("should get active sessions", async () => {
+        //createAndLoginUsers(2)
+        //loginUser(1, 'mozila')
+        //loginUser(1, 'chrom')
         const res = await request(app)
             .get(paths.sessions)
             .set("Cookie", firstUserDevices[0].refreshTokenCookie)

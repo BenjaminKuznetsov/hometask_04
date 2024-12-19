@@ -1,10 +1,26 @@
-export type BlogDBModel = {
+import { HydratedDocument, model, Schema } from "mongoose"
+import { Timestamps } from "../../common/types/types"
+
+export type Blog = {
     name: string
     description: string
     websiteUrl: string
-    createdAt: string
+    // createdAt: string
     isMembership: boolean
 }
+
+export type BlogDocument = HydratedDocument<Blog> & Timestamps
+
+export const BlogSchema = new Schema<Blog>({
+    name: { type: String, require: true },
+    description: { type: String, require: true },
+    websiteUrl: { type: String, require: true },
+    isMembership: { type: Boolean, require: true },
+}, {
+    timestamps: true,
+})
+
+export const BlogModel = model<Blog>("blogs", BlogSchema)
 
 export type BlogViewModel = {
     id: string
@@ -33,3 +49,4 @@ export type BlogInputModel = {
     description: string
     websiteUrl: string
 }
+

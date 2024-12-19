@@ -1,5 +1,5 @@
 import { sessionsRepo } from "./sessions.repo"
-import { DeviceViewModel } from "./sessions.types"
+import { DeviceViewModel } from "./sessions.model"
 import useragent from "express-useragent"
 import { ResultType } from "../../common/result/result.type"
 import { resultHelpers } from "../../common/result/helpers"

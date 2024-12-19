@@ -1,14 +1,12 @@
-import { MeViewModel, UserDBModel, UserSearchParams, UserViewModel } from "./userModels"
-import { usersCollection } from "../../db/mongo"
-import { ObjectId, WithId } from "mongodb"
+import { MeViewModel, UserDocument, UserModel, UserSearchParams, UserViewModel } from "./userModels"
 import { Paginator, PagingParams } from "../../common/types/types"
 
-function userMapperToView(user: WithId<UserDBModel>): UserViewModel {
+function userMapperToView(user: UserDocument): UserViewModel {
     return {
         id: user._id.toString(),
         login: user.login,
         email: user.email,
-        createdAt: user.createdAt,
+        createdAt: user.createdAt.toISOString(),
     }
 }
 
@@ -28,14 +26,14 @@ export const usersQueryRepo = {
             }
         }
 
-        const foundUsers = await usersCollection
-            .find(filter)
-            .sort(pagingParams.sortBy, pagingParams.sortDirection)
-            .skip((pagingParams.pageNumber - 1) * pagingParams.pageSize)
-            .limit(pagingParams.pageSize)
-            .toArray()
+        const foundUsers: UserDocument[] = await UserModel
+            .find(filter, null, {
+                sort: { [pagingParams.sortBy]: pagingParams.sortDirection },
+                skip: (pagingParams.pageNumber - 1) * pagingParams.pageSize,
+                limit: pagingParams.pageSize,
+            })
 
-        const totalCount = await usersCollection.countDocuments(filter)
+        const totalCount = await UserModel.countDocuments(filter)
 
         return {
             pagesCount: Math.ceil((totalCount / pagingParams.pageSize) || 1),
@@ -47,13 +45,12 @@ export const usersQueryRepo = {
     },
 
     getUserById: async (id: string): Promise<UserViewModel | null> => {
-        const foundUser = await usersCollection.findOne({ _id: new ObjectId(id) })
+        const foundUser: UserDocument | null = await UserModel.findById(id)
         return foundUser ? userMapperToView(foundUser) : null
     },
 
     async getMe(id: string): Promise<MeViewModel> {
-        const userId = new ObjectId(id)
-        const foundUser = await usersCollection.findOne({ _id: userId })
+        const foundUser = await UserModel.findById(id)
         return {
             userId: foundUser!._id.toString(),
             login: foundUser!.login,

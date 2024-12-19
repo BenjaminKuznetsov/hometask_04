@@ -1,5 +1,5 @@
 import { ResultType } from "../../common/result/result.type"
-import { ConfirmationStatus, TEmailConfirmation, TUserWithId, UserDBModel, UserInputModel } from "../user/userModels"
+import { ConfirmationStatus, TEmailConfirmation, User, UserDocument, UserInputModel } from "../user/userModels"
 import { usersRepo } from "../user/usersRepo"
 import { resultHelpers } from "../../common/result/helpers"
 import { bcryptService } from "../../common/adapters/bcrypt.service"
@@ -9,12 +9,12 @@ import { emailManager } from "../../common/managers/email.manager"
 import { v4 as uuidv4 } from "uuid"
 import { add } from "date-fns"
 import { LoginUserDTO, TTokenPair } from "./auth.types"
-import { SessionsDBModel, SessionUpdateDTO } from "../sessions/sessions.types"
+import { Session, SessionUpdateDTO } from "../sessions/sessions.model"
 import { sessionsRepo } from "../sessions/sessions.repo"
 import { RefreshTokenPayload } from "../../common/types/types"
 
 export const authService = {
-    async checkCredentials(loginOrEmail: string, password: string): Promise<ResultType<TUserWithId | null>> {
+    async checkCredentials(loginOrEmail: string, password: string): Promise<ResultType<UserDocument | null>> {
         const user = await usersRepo.getUserByLoginOrEmail(loginOrEmail)
         if (!user) {
             return resultHelpers.notFound()
@@ -45,7 +45,7 @@ export const authService = {
         const decodedRefreshToken = await jwtService.decodeToken(refreshToken) as RefreshTokenPayload
         // console.log("decodedRefreshToken", decodedRefreshToken)
 
-        const newSession: SessionsDBModel = {
+        const newSession: Session = {
             user_id: userId,
             device_id: deviceId,
             user_agent: userAgent,
@@ -149,7 +149,7 @@ export const authService = {
     },
 
     async resendUserConfirmationEmail(email: string): Promise<ResultType<true | null>> {
-        const user = await usersRepo.getUserByFilter({ email })
+        const user: UserDocument | null = await usersRepo.getUserByFilter({ email })
 
         if (!user) {
             return resultHelpers.badRequest({ field: "email", message: "User with such email doesn`t exist" })
@@ -159,26 +159,15 @@ export const authService = {
             return resultHelpers.badRequest({ field: "email", message: "User with this email is already confirmed" })
         }
 
-        const newEmailConfirmationData: TEmailConfirmation = {
-            confirmationStatus: ConfirmationStatus.NOT_CONFIRMED,
-            confirmationCode: uuidv4(),
-            expirationDate: add(new Date(), {
-                hours: 1,
-                minutes: 30,
-            }),
-        }
+        user.emailConfirmation.confirmationCode = uuidv4()
+        user.emailConfirmation.expirationDate = add(new Date(), {
+            hours: 1,
+            minutes: 30,
+        })
 
-        const newUserData: UserDBModel = {
-            login: user.login,
-            email: user.email,
-            passwordHash: user.passwordHash,
-            createdAt: user.createdAt,
-            emailConfirmation: newEmailConfirmationData,
-        }
+        await user.save()
 
-        await usersRepo.updateUser(user.id, newUserData)
-
-        emailManager.userRegistrationConfirmation({ id: user.id, ...newUserData })
+        emailManager.userRegistrationConfirmation(user)
 
         return resultHelpers.success(true)
     },

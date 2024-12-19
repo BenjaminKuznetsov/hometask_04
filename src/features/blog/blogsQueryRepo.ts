@@ -1,15 +1,13 @@
-import { BlogDBModel, BlogSearchParams, BlogViewModel } from "./blogModels"
-import { blogsCollection } from "../../db/mongo"
-import { ObjectId, WithId } from "mongodb"
+import { BlogDocument, BlogModel, BlogSearchParams, BlogViewModel } from "./blog.model"
 import { Paginator, PagingParams } from "../../common/types/types"
 
-function blogMapperToView(blog: WithId<BlogDBModel>): BlogViewModel {
+function blogMapperToView(blog: BlogDocument): BlogViewModel {
     return {
         id: blog._id.toString(),
         name: blog.name,
         description: blog.description,
         websiteUrl: blog.websiteUrl,
-        createdAt: blog.createdAt,
+        createdAt: blog.createdAt.toISOString(),
         isMembership: blog.isMembership,
     }
 }
@@ -22,14 +20,14 @@ export const blogsQueryRepo = {
             filter.name = { $regex: searchParams.searchNameTerm, $options: "i" }
         }
 
-        const foundBlogs = await blogsCollection
-            .find(filter)
-            .sort(pagingParams.sortBy, pagingParams.sortDirection)
-            .skip((pagingParams.pageNumber - 1) * pagingParams.pageSize)
-            .limit(pagingParams.pageSize)
-            .toArray()
+        const foundBlogs: BlogDocument[] = await BlogModel
+            .find(filter, null, {
+                sort: { [pagingParams.sortBy]: pagingParams.sortDirection },
+                skip: (pagingParams.pageNumber - 1) * pagingParams.pageSize,
+                limit: pagingParams.pageSize,
+            })
 
-        const totalCount = await blogsCollection.countDocuments(filter)
+        const totalCount = await BlogModel.countDocuments(filter)
 
         return {
             pagesCount: Math.ceil((totalCount / pagingParams.pageSize) || 1),
@@ -41,8 +39,7 @@ export const blogsQueryRepo = {
 
     },
     getBlogById: async (id: string): Promise<BlogViewModel | null> => {
-        const _id = new ObjectId(id)
-        const foundBlog = await blogsCollection.findOne({ _id })
+        const foundBlog: BlogDocument | null = await BlogModel.findById(id)
         return foundBlog ? blogMapperToView(foundBlog) : null
     },
 }

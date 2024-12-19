@@ -1,5 +1,4 @@
-import { commentsCollection } from "../../db/mongo"
-import { TCommentViewModel } from "./comments.types"
+import { CommentDocument, CommentModel, TCommentViewModel } from "./comments.model"
 import { ObjectId } from "mongodb"
 import { usersRepo } from "../user/usersRepo"
 import { Paginator, PagingParams } from "../../common/types/types"
@@ -20,12 +19,12 @@ export const commentsQueryRepo = {
             }
         }
 
-        const comments = await commentsCollection
-            .find({ postId: postId })
-            .sort(pagingParams.sortBy, pagingParams.sortDirection)
-            .skip((pagingParams.pageNumber - 1) * pagingParams.pageSize)
-            .limit(pagingParams.pageSize)
-            .toArray()
+        const comments: CommentDocument[] = await CommentModel
+            .find({ postId: postId }, null, {
+                sort: { [pagingParams.sortBy]: pagingParams.sortDirection },
+                skip: (pagingParams.pageNumber - 1) * pagingParams.pageSize,
+                limit: pagingParams.pageSize,
+            })
 
         const mappedComments: TCommentViewModel[] = []
 
@@ -39,11 +38,11 @@ export const commentsQueryRepo = {
                     userId: user!.id,
                     userLogin: user!.login,
                 },
-                createdAt: comment.createdAt,
+                createdAt: comment.createdAt.toISOString(),
             })
         }
 
-        const totalCount = await commentsCollection.countDocuments({ postId })
+        const totalCount = await CommentModel.countDocuments({ postId })
 
         return {
             pagesCount: Math.ceil((totalCount / pagingParams.pageSize) || 1),
@@ -59,7 +58,7 @@ export const commentsQueryRepo = {
             return null
         }
         const _id = new ObjectId(id)
-        const foundComment = await commentsCollection.findOne({ _id })
+        const foundComment: CommentDocument | null = await CommentModel.findOne({ _id })
 
         if (!foundComment) {
             return null
@@ -74,7 +73,7 @@ export const commentsQueryRepo = {
                 userId: user!.id,
                 userLogin: user!.login,
             },
-            createdAt: foundComment.createdAt,
+            createdAt: foundComment.createdAt.toISOString(),
         }
     },
 }

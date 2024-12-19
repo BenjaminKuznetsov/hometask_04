@@ -1,32 +1,22 @@
-import { BlogDBModel, BlogInputModel, BlogSearchParams, BlogViewModel } from "./blogModels"
-import { blogsCollection } from "../../db/mongo"
-import { ObjectId, WithId } from "mongodb"
-
-function removeObjectId(blog: WithId<BlogDBModel>): BlogViewModel {
-    return {
-        ...blog,
-        id: blog._id.toString(),
-    }
-}
+import { Blog, BlogDocument, BlogInputModel, BlogModel } from "./blog.model"
+import { ObjectId } from "mongodb"
 
 export const blogsRepository = {
-    getBlogById: async (id: string): Promise<BlogViewModel | null> => {
-        const _id = new ObjectId(id)
-        const foundBlog = await blogsCollection.findOne({ _id })
-        return foundBlog ? removeObjectId(foundBlog) : null
+    getBlogById: async (id: string): Promise<BlogDocument | null> => {
+        return await BlogModel.findById(id) as BlogDocument
     },
-    createBlog: async (newBlog: BlogDBModel): Promise<string> => {
-        const result = await blogsCollection.insertOne(newBlog)
-        return result.insertedId.toString()
+    createBlog: async (newBlog: Blog): Promise<string> => {
+        const createdBlog = await BlogModel.create(newBlog)
+        return createdBlog._id.toString()
     },
     updateBlog: async (id: string, input: BlogInputModel): Promise<boolean> => {
         const _id = new ObjectId(id)
-        const result = await blogsCollection.updateOne({ _id: _id }, { $set: input })
+        const result = await BlogModel.updateOne({ _id: _id }, { $set: input })
         return !!result.matchedCount
     },
     deleteBlog: async (id: string): Promise<boolean> => {
         const _id = new ObjectId(id)
-        const result = await blogsCollection.deleteOne({ _id })
+        const result = await BlogModel.deleteOne({ _id })
         return !!result.deletedCount
     },
 }

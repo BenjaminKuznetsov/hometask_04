@@ -1,16 +1,14 @@
-import { SessionsDBModel, SessionUpdateDTO } from "./sessions.types"
-import { sessionsCollection } from "../../db/mongo"
-import { WithId } from "mongodb"
+import { Session, SessionDocument, SessionModel, SessionUpdateDTO } from "./sessions.model"
 import { RefreshTokenPayload } from "../../common/types/types"
 
 export const sessionsRepo = {
-    async createSession(session: SessionsDBModel): Promise<string> {
-        const result = await sessionsCollection.insertOne(session)
-        return result.insertedId.toString()
+    async createSession(session: Session): Promise<string> {
+        const createdSession = await SessionModel.create(session)
+        return createdSession._id.toString()
     },
 
     async doesSessionExists(data: RefreshTokenPayload): Promise<boolean> {
-        const result = await sessionsCollection.findOne({
+        const result = await SessionModel.findOne({
             user_id: data.userId,
             device_id: data.deviceId,
             iat: data.iat,
@@ -20,7 +18,7 @@ export const sessionsRepo = {
     },
 
     async updateSession(session: SessionUpdateDTO): Promise<boolean> {
-        const result = await sessionsCollection.updateOne({
+        const result = await SessionModel.updateOne({
             user_id: session.user_id,
             device_id: session.device_id,
         }, {
@@ -30,22 +28,22 @@ export const sessionsRepo = {
     },
 
     async deleteSession(userId: string, deviceId: string): Promise<boolean> {
-        const result = await sessionsCollection.deleteOne({ user_id: userId, device_id: deviceId })
+        const result = await SessionModel.deleteOne({ user_id: userId, device_id: deviceId })
         return !!result.deletedCount
     },
 
     async deleteAllOtherUserSessions(userId: string, deviceId: string): Promise<boolean> {
-        const result = await sessionsCollection.deleteMany({ user_id: userId, device_id: { $ne: deviceId } })
+        const result = await SessionModel.deleteMany({ user_id: userId, device_id: { $ne: deviceId } })
         return !!result.deletedCount
     },
-    async getSessionsByUserId(userId: string): Promise<WithId<SessionsDBModel>[]> {
-        return await sessionsCollection.find({ user_id: userId }).sort({ iat: -1 }).toArray()
+    async getSessionsByUserId(userId: string): Promise<SessionDocument[]> {
+        return SessionModel.find({ user_id: userId }).sort({ iat: -1 })
     },
-    async getSessionsByDeviceId(deviceId: string): Promise<WithId<SessionsDBModel>[]> {
-        return await sessionsCollection.find({ device_id: deviceId }).toArray()
+    async getSessionsByDeviceId(deviceId: string): Promise<SessionDocument[]> {
+        return SessionModel.find({ device_id: deviceId })
     },
     async deleteSessionByUserIdAndDeviceId(userId: string, deviceId: string): Promise<number> {
-        const result = await sessionsCollection.deleteOne({ user_id: userId, device_id: deviceId })
+        const result = await SessionModel.deleteOne({ user_id: userId, device_id: deviceId })
         return result.deletedCount
     },
 }

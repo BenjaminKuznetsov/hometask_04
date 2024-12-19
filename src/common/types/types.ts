@@ -42,3 +42,7 @@ export type RefreshTokenPayload = {
     iat: number
     exp: number
 }
+export type Timestamps = {
+    createdAt: Date
+    updatedAt: Date
+}

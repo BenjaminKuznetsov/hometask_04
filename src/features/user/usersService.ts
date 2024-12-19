@@ -1,4 +1,4 @@
-import { UserDBModel, UserInputModel, ConfirmationStatus, TEmailConfirmation } from "./userModels"
+import { User, UserInputModel, ConfirmationStatus, TEmailConfirmation } from "./userModels"
 import { usersRepo } from "./usersRepo"
 import { ResultType } from "../../common/result/result.type"
 import { resultHelpers } from "../../common/result/helpers"
@@ -34,11 +34,10 @@ export const usersService = {
                 }),
             }
 
-        const newUser: UserDBModel = {
+        const newUser: User = {
             login: input.login,
             email: input.email,
             passwordHash: passwordHash,
-            createdAt: new Date().toISOString(),
             emailConfirmation,
         }
         const newUserId = await usersRepo.createUser(newUser)

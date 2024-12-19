@@ -5,8 +5,8 @@ import { appConfig } from "../../../common/config/config"
 import { resultHelpers } from "../../../common/result/helpers"
 
 export const apiRequestsService = {
-    async saveRequest(ip: string, url: string): Promise<any> {
-        return apiRequestsRepo.saveRequest(ip, url)
+    async saveRequest(ip: string, url: string): Promise<void> {
+        await apiRequestsRepo.saveRequest(ip, url)
     },
 
     async checkTooManyRequests(ip: string, url: string): Promise<ResultType<true | null>> {

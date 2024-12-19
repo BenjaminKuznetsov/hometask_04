@@ -1,5 +1,5 @@
 import { Request, Response, Router } from "express"
-import { DeviceViewModel } from "./sessions.types"
+import { DeviceViewModel } from "./sessions.model"
 import { bearerAuthMiddleware } from "../../common/middleware/bearer-auth"
 import { sessionsService } from "./sessions.service"
 import { HttpStatus } from "../../common/httpStatus"
@@ -9,6 +9,8 @@ export const sessionsRouter = Router()
 
 const checkRefreshTokenMiddleware = async (req: Request, res: Response, next: () => void) => {
     const refreshToken: string = req.cookies.refreshToken
+    //payload = await authService.validateRefreshToken(refreshToken)
+    //req.userContext = {userId: payload.userId, deviceId: string}
     if (!refreshToken) {
         res.sendStatus(HttpStatus.Unauthorized)
         return
@@ -19,6 +21,8 @@ const checkRefreshTokenMiddleware = async (req: Request, res: Response, next: ()
 sessionsRouter.get("/",
     checkRefreshTokenMiddleware,
     async (req: Request, res: Response<DeviceViewModel[]>) => {
+        // TODO: переделать
+        //     const userId = req.user.userId
         const result = await sessionsService.getUserDevices(req.cookies.refreshToken)
         if (!resultHelpers.isSuccess(result)) {
             res.sendStatus(HttpStatus.Unauthorized)

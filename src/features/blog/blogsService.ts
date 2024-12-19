@@ -1,21 +1,10 @@
-import { BlogDBModel, BlogInputModel, BlogViewModel } from "./blogModels"
+import { Blog, BlogInputModel } from "./blog.model"
 import { blogsRepository } from "./blogsRepository"
 
 export const blogsService = {
-    // getBlogs: async (): Promise<any> => {
-    // const foundBlogs = await usersRepository.getBlogs(queryParams)
-    // const totalCount = await usersRepository.getBlogsCount()
-    // },
-    getBlogById: async (id: string): Promise<BlogViewModel | null> => {
-        return await blogsRepository.getBlogById(id)
-    },
-    // getPostsByBlogId: async (searchParams: PostSearchParams): Promise<Paginator<PostViewModel>> => {
-    //     return await postsService.getPosts(searchParams)
-    // },
     createBlog: async (input: BlogInputModel): Promise<string> => {
-        const newBlog: BlogDBModel = {
+        const newBlog: Blog = {
             ...input,
-            createdAt: new Date().toISOString(),
             isMembership: false,
         }
         return await blogsRepository.createBlog(newBlog)

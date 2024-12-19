@@ -1,36 +1,23 @@
-import request from "supertest"
-import { app } from "../../src/app"
-import { paths } from "../../src/common/paths"
-import { runTestDb, usersCollection } from "../../src/db/mongo"
-import { MongoMemoryServer } from "mongodb-memory-server"
-import { MongoClient, ObjectId } from "mongodb"
+import { db } from "../../src/db/mongo"
+import { ObjectId } from "mongodb"
 import { authService } from "../../src/features/auth/auth.service"
 import { mockUsers } from "../helpers/mock-data"
 import { ResultStatus } from "../../src/common/result/result.type"
 import { emailAdapter } from "../../src/common/adapters/email.adapter"
 import { emailManager } from "../../src/common/managers/email.manager"
-import { TUserWithId } from "../../src/features/user/userModels"
+import { UserDocument, UserModel } from "../../src/features/user/userModels"
 
 describe("user registration", () => {
-    let mongoServer: MongoMemoryServer
-    let mongoClient: MongoClient
-    let user: TUserWithId
+
+    let user: UserDocument
 
     beforeAll(async () => {
-        const { server, client } = await runTestDb()
-        mongoServer = server
-        mongoClient = client
-        await request(app).delete(paths.testing)
-
+        await db.run()
+        await db.drop()
     })
 
     afterAll(async () => {
-        if (mongoClient) {
-            await mongoClient.close()
-        }
-        if (mongoServer) {
-            await mongoServer.stop()
-        }
+        await db.stop()
     })
 
     // afterEach(() => {
@@ -87,7 +74,7 @@ describe("user registration", () => {
         const result = await registerUserUseCase(mockUsers[1])
         expect(result.status).toBe(ResultStatus.Success)
         const newUser = spy.mock.calls[0][0]
-        await usersCollection.updateOne({ _id: new ObjectId(newUser.id) }, { $set: { "emailConfirmation.expirationDate": new Date() } })
+        await UserModel.updateOne({ _id: new ObjectId(newUser.id) }, { $set: { "emailConfirmation.expirationDate": new Date() } })
         const result2 = await confirmUserUseCase(newUser.emailConfirmation.confirmationCode!)
         expect(result2.status).toBe(ResultStatus.BadRequest)
     })

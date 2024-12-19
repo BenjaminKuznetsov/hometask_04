@@ -2,26 +2,22 @@ import request from "supertest"
 import { app } from "../../src/app"
 import { paths } from "../../src/common/paths"
 import { HttpStatus } from "../../src/common/httpStatus"
-import { runTestDb } from "../../src/db/mongo"
+import { db } from "../../src/db/mongo"
 import { CreatedUser, e2eSeeder } from "../helpers/seeders"
-import { PostViewModel } from "../../src/features/posts/postModels"
-import { TCommentInput, TCommentViewModel } from "../../src/features/comments/comments.types"
+import { PostViewModel } from "../../src/features/posts/post.model"
+import { TCommentInput, TCommentViewModel } from "../../src/features/comments/comments.model"
 import { generateText } from "../helpers/utils"
-import { MongoClient, ObjectId } from "mongodb"
+import { ObjectId } from "mongodb"
 import _ from "lodash"
-import { MongoMemoryServer } from "mongodb-memory-server"
 
 describe("comments", () => {
-    let mongoServer: MongoMemoryServer
-    let mongoClient: MongoClient
 
     let posts: PostViewModel[]
     let users: CreatedUser[]
 
     beforeAll(async () => {
-        const { server, client } = await runTestDb()
-        mongoServer = server
-        mongoClient = client
+        await db.run()
+        await db.drop()
 
         posts = await e2eSeeder.posts(4)
         users = await e2eSeeder.users(2)
@@ -40,12 +36,7 @@ describe("comments", () => {
     })
 
     afterAll(async () => {
-        if (mongoClient) {
-            await mongoClient.close()
-        }
-        if (mongoServer) {
-            await mongoServer.stop()
-        }
+        await db.stop()
     })
 
     describe("test one comment", () => {

@@ -1,21 +1,15 @@
 import express, { Request, Response } from "express"
 import { blogsService } from "./blogsService"
-import { BlogInputModel, BlogSearchParams, BlogViewModel, exampleBlogDocument } from "./blogModels"
-import {
-    Paginator,
-    PagingParams,
-    RequestWithBody,
-    RequestWithParams,
-    RequestWithParamsAndBody,
-} from "../../common/types/types"
+import { BlogInputModel, BlogSearchParams, BlogViewModel, exampleBlogDocument } from "./blog.model"
+import { Paginator, RequestWithBody, RequestWithParams, RequestWithParamsAndBody } from "../../common/types/types"
 import { basicAuthMiddleware } from "../../common/middleware/basic-auth"
 import { blogValidators, handleNotFoundError } from "./blogValidators"
 import { HttpStatus } from "../../common/httpStatus"
 import { handleErrorsMiddleware } from "../../common/middleware/handleErrors"
 import { postValidators } from "../posts/postValidators"
-import { examplePostDocument, PostInputModel, PostSearchParams, PostViewModel } from "../posts/postModels"
+import { examplePostDocument, PostInputModel, PostSearchParams, PostViewModel } from "../posts/post.model"
 import { BlogNotFoundError, postsService } from "../posts/postsService"
-import { isKeyOf, pagingUtil } from "../../common/helpers"
+import { pagingUtil } from "../../common/helpers"
 import { blogsQueryRepo } from "./blogsQueryRepo"
 import { postsQueryRepo } from "../posts/postsQueryRepo"
 import { blogsRepository } from "./blogsRepository"

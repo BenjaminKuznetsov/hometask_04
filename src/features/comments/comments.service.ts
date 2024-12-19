@@ -1,4 +1,4 @@
-import { TCommentInput } from "./comments.types"
+import { TCommentInput } from "./comments.model"
 import { ResultType } from "../../common/result/result.type"
 import { postsRepository } from "../posts/postsRepository"
 import { resultHelpers } from "../../common/result/helpers"

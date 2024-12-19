@@ -5,8 +5,8 @@ import { encodeToBase64 } from "../../src/common/helpers"
 import { mockUsers, validBlogs, validPosts } from "./mock-data"
 import { HttpStatus } from "../../src/common/httpStatus"
 import { appConfig } from "../../src/common/config/config"
-import { BlogViewModel } from "../../src/features/blog/blogModels"
-import { PostInputModel, PostViewModel } from "../../src/features/posts/postModels"
+import { BlogViewModel } from "../../src/features/blog/blog.model"
+import { PostInputModel, PostViewModel } from "../../src/features/posts/post.model"
 
 export type CreatedUser = {
     id: string

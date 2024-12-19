@@ -1,9 +1,10 @@
-export type UserDBModel = {
-    id?: string
+import { HydratedDocument, model, Schema } from "mongoose"
+import { Timestamps } from "../../common/types/types"
+
+export type User = {
     login: string
     email: string
     passwordHash: string
-    createdAt: string
     emailConfirmation: TEmailConfirmation
 }
 
@@ -19,9 +20,26 @@ export enum ConfirmationStatus {
     CONFIRMED = 2,
 }
 
-export type TUserWithId = UserDBModel & {
-    id: string
-}
+export type UserDocument = HydratedDocument<User> & Timestamps
+
+const emailConfirmationSchema = new Schema<TEmailConfirmation>({
+    confirmationCode: { type: String },
+    expirationDate: { type: Date },
+    confirmationStatus: { type: Number, enum: ConfirmationStatus, required: true },
+}, {
+    timestamps: true,
+})
+
+export const userSchema = new Schema<User>({
+    login: { type: String, required: true },
+    email: { type: String, required: true },
+    passwordHash: { type: String, required: true },
+    emailConfirmation: emailConfirmationSchema,
+}, {
+    timestamps: true,
+})
+
+export const UserModel = model<User>("users", userSchema)
 
 export type UserDBFilter = {
     login?: string

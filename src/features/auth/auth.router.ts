@@ -13,7 +13,6 @@ import { paths } from "../../common/paths"
 import { emailValidator, userValidators } from "../user/userValidators"
 import { appConfig } from "../../common/config/config"
 import { refreshTokenMiddleware } from "./auth.middlewares"
-import { add } from "date-fns"
 
 export const authRouter = Router()
 

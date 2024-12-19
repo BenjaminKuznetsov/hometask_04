@@ -4,43 +4,25 @@ import { paths } from "../../src/common/paths"
 import { HttpStatus } from "../../src/common/httpStatus"
 import { invalidBlogs, validBlogs } from "../helpers/mock-data"
 import { encodeToBase64 } from "../../src/common/helpers"
-import { runTestDb } from "../../src/db/mongo"
-import { MongoMemoryServer } from "mongodb-memory-server"
-import { MongoClient, ObjectId } from "mongodb"
-import { BlogViewModel } from "../../src/features/blog/blogModels"
+import { db } from "../../src/db/mongo"
+import { ObjectId } from "mongodb"
+import { BlogViewModel } from "../../src/features/blog/blog.model"
 import { isValidIsoDate } from "../helpers/utils"
 import { appConfig } from "../../src/common/config/config"
 
 const ADMIN_AUTH = appConfig.adminAuth
 
 describe("blogs", () => {
-    let mongoServer: MongoMemoryServer
-    let mongoClient: MongoClient
 
     const dbBlogs: BlogViewModel[] = []
 
     beforeAll(async () => {
-        const { server, client } = await runTestDb()
-        mongoServer = server
-        mongoClient = client
+        await db.run()
+        await db.drop()
     })
 
     afterAll(async () => {
-        if (mongoClient) {
-            await mongoClient.close()
-        }
-        if (mongoServer) {
-            await mongoServer.stop()
-        }
-    })
-
-    it("should successfully set & get information from the database", async () => {
-        const db = mongoClient.db(mongoServer.instanceInfo!.dbName)
-        expect(db).toBeDefined()
-        const col = db.collection("test")
-        const result = await col.insertMany([ { a: 1 }, { b: 1 } ])
-        expect(result.insertedCount).toStrictEqual(2)
-        expect(await col.countDocuments({})).toBe(2)
+        await db.stop()
     })
 
     it("should return status 200 with empty array of blogs ", async () => {

@@ -11,7 +11,7 @@ describe("jwt token", () => {
         expect(token).toStrictEqual(expect.any(String))
         const result = await verifyTokenUseCase(token)
         expect(result.status).toBe(ResultStatus.Success)
-        expect(result.data).toStrictEqual({ userId })
+        expect(result.data).toStrictEqual({ userId, iat: expect.any(Number), exp: expect.any(Number) })
     })
 
     it("shouldn`t verify expired access token", async () => {

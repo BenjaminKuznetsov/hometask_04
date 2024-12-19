@@ -2,30 +2,17 @@ import request from "supertest"
 import { app } from "../../src/app"
 import { paths } from "../../src/common/paths"
 import { HttpStatus } from "../../src/common/httpStatus"
-import { runTestDb } from "../../src/db/mongo"
+import { db } from "../../src/db/mongo"
 import { CreatedUser, e2eSeeder } from "../helpers/seeders"
-import { MongoMemoryServer } from "mongodb-memory-server"
-import { MongoClient } from "mongodb"
 
 describe("auth", () => {
-    let mongoServer: MongoMemoryServer
-    let mongoClient: MongoClient
-
     beforeAll(async () => {
-        const { server, client } = await runTestDb()
-        mongoServer = server
-        mongoClient = client
-        await request(app).delete(paths.testing)
-
+        await db.run()
+        await db.drop()
     })
 
     afterAll(async () => {
-        if (mongoClient) {
-            await mongoClient.close()
-        }
-        if (mongoServer) {
-            await mongoServer.stop()
-        }
+        await db.stop()
     })
 
     describe("first user", () => {

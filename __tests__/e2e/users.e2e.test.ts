@@ -4,33 +4,28 @@ import { paths } from "../../src/common/paths"
 import { HttpStatus } from "../../src/common/httpStatus"
 import { mockUsers } from "../helpers/mock-data"
 import { encodeToBase64 } from "../../src/common/helpers"
-import { runTestDb } from "../../src/db/mongo"
+import { db } from "../../src/db/mongo"
 import { UserInputModel } from "../../src/features/user/userModels"
 import { appConfig } from "../../src/common/config/config"
-import { MongoMemoryServer } from "mongodb-memory-server"
-import { MongoClient } from "mongodb"
 
 describe("users", () => {
-    let mongoServer: MongoMemoryServer
-    let mongoClient: MongoClient
 
     beforeAll(async () => {
-        const { server, client } = await runTestDb()
-        mongoServer = server
-        mongoClient = client
+        await db.run()
+        await db.drop()
     })
 
     afterAll(async () => {
-        if (mongoClient) {
-            await mongoClient.close()
-        }
-        if (mongoServer) {
-            await mongoServer.stop()
-        }
+        await db.stop()
     })
 
     beforeEach(async () => {
-        await request(app).delete(paths.testing)
+        // await request(app).delete(paths.testing)
+        //createAndLoginUsers(3)
+    })
+
+    afterEach(async () => {
+        await db.drop()
     })
 
     it("shouldn't accept unauthenticated requests", async () => {

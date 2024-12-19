@@ -28,4 +28,3 @@ export function pagingUtil<T extends object>(input: PagingInput, example: T): Pa
         pageSize,
     }
 }
-

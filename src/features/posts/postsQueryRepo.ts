@@ -1,9 +1,7 @@
-import { PostDBModel, PostSearchParams, PostViewModel } from "./postModels"
-import { postsCollection } from "../../db/mongo"
-import { ObjectId, WithId } from "mongodb"
+import { PostDocument, PostModel, PostSearchParams, PostViewModel } from "./post.model"
 import { Paginator, PagingParams } from "../../common/types/types"
 
-function postMapperToView(post: WithId<PostDBModel>): PostViewModel {
+function postMapperToView(post: PostDocument): PostViewModel {
     return {
         id: post._id.toString(),
         title: post.title,
@@ -11,7 +9,7 @@ function postMapperToView(post: WithId<PostDBModel>): PostViewModel {
         content: post.content,
         blogId: post.blogId.toString(),
         blogName: post.blogName,
-        createdAt: post.createdAt,
+        createdAt: post.createdAt.toISOString(),
     }
 }
 
@@ -22,14 +20,14 @@ export const postsQueryRepo = {
             filter.blogId = searchParams.blogId
         }
 
-        const foundPosts = await postsCollection
-            .find(filter)
-            .sort(pagingParams.sortBy, pagingParams.sortDirection)
-            .skip((pagingParams.pageNumber - 1) * pagingParams.pageSize)
-            .limit(pagingParams.pageSize)
-            .toArray()
+        const foundPosts: PostDocument[] = await PostModel
+            .find(filter, null, {
+                sort: { [pagingParams.sortBy]: pagingParams.sortDirection },
+                skip: (pagingParams.pageNumber - 1) * pagingParams.pageSize,
+                limit: pagingParams.pageSize,
+            })
 
-        const totalCount = await postsCollection.countDocuments(filter)
+        const totalCount = await PostModel.countDocuments(filter)
 
         return {
             pagesCount: Math.ceil((totalCount / pagingParams.pageSize) || 1),
@@ -40,8 +38,7 @@ export const postsQueryRepo = {
         }
     },
     getPostById: async (id: string): Promise<PostViewModel | null> => {
-        const _id = new ObjectId(id)
-        const foundPost = await postsCollection.findOne({ _id })
+        const foundPost: PostDocument | null = await PostModel.findById(id)
         return foundPost ? postMapperToView(foundPost) : null
     },
 }
