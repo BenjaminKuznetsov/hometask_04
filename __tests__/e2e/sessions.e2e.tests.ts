@@ -5,7 +5,7 @@ import { paths } from "../../src/common/paths"
 import { HttpStatus } from "../../src/common/httpStatus"
 import { jwtService } from "../../src/common/adapters/jwt.service"
 import { JwtPayload } from "jsonwebtoken"
-import { DeviceViewModel } from "../../src/features/sessions/sessions.model"
+import { DeviceViewModel } from "../../src/features/sessions/domain/sessions.model"
 
 const mockUsers = [
     {

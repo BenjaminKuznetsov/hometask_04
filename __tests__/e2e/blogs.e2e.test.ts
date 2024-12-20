@@ -6,7 +6,7 @@ import { invalidBlogs, validBlogs } from "../helpers/mock-data"
 import { encodeToBase64 } from "../../src/common/helpers"
 import { db } from "../../src/db/mongo"
 import { ObjectId } from "mongodb"
-import { BlogViewModel } from "../../src/features/blog/blog.model"
+import { BlogViewModel } from "../../src/features/blog/domain/blog.model"
 import { isValidIsoDate } from "../helpers/utils"
 import { appConfig } from "../../src/common/config/config"
 

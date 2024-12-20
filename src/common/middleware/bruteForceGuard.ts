@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express"
-import { apiRequestsService } from "../../features/utils/api-requests/api-requests.service"
+import { apiRequestsService } from "../../features/utils/api-requests/application/api-requests.service"
 import { resultHelpers } from "../result/helpers"
 import { HttpStatus } from "../httpStatus"
 import { paths } from "../paths"

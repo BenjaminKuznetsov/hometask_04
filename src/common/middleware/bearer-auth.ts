@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express"
 import { HttpStatus } from "../httpStatus"
 import { jwtService } from "../adapters/jwt.service"
 import { resultHelpers } from "../result/helpers"
-import { usersRepo } from "../../features/user/usersRepo"
+import { usersRepo } from "../../features/user/infra/usersRepo"
 
 export const bearerAuthMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization

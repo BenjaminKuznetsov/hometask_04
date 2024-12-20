@@ -1,11 +1,11 @@
 import { db } from "../../src/db/mongo"
 import { ObjectId } from "mongodb"
-import { authService } from "../../src/features/auth/auth.service"
+import { authService } from "../../src/features/auth/application/auth.service"
 import { mockUsers } from "../helpers/mock-data"
 import { ResultStatus } from "../../src/common/result/result.type"
 import { emailAdapter } from "../../src/common/adapters/email.adapter"
 import { emailManager } from "../../src/common/managers/email.manager"
-import { UserDocument, UserModel } from "../../src/features/user/userModels"
+import { UserDocument, UserModel } from "../../src/features/user/domain/userModels"
 
 describe("user registration", () => {
 

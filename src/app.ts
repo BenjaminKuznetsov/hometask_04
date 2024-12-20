@@ -1,16 +1,16 @@
 import express, { Request, Response } from "express"
-import { blogsRouter } from "./features/blog/blogsRouter"
-import { postsRouter } from "./features/posts/posts.router"
+import { blogsRouter } from "./features/blog/api/blogsRouter"
+import { postsRouter } from "./features/posts/api/posts.router"
 import { paths } from "./common/paths"
 import { HttpStatus } from "./common/httpStatus"
 import { db } from "./db/mongo"
-import { usersRouter } from "./features/user/usersRouter"
-import { authRouter } from "./features/auth/auth.router"
-import { commentsRouter } from "./features/comments/comments.router"
+import { usersRouter } from "./features/user/api/usersRouter"
+import { authRouter } from "./features/auth/api/auth.router"
+import { commentsRouter } from "./features/comments/api/comments.router"
 import cookieParser from "cookie-parser"
 import { bruteForceGuard } from "./common/middleware/bruteForceGuard"
 import { registrator } from "./common/middleware/registrator"
-import { sessionsRouter } from "./features/sessions/sessions.router"
+import { sessionsRouter } from "./features/sessions/api/sessions.router"
 
 export const app = express()
 

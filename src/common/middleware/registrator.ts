@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express"
-import { apiRequestsService } from "../../features/utils/api-requests/api-requests.service"
+import { apiRequestsService } from "../../features/utils/api-requests/application/api-requests.service"
 
 export const registrator = async (req: Request, res: Response, next: NextFunction) => {
     // const userAgent = req.headers["user-agent"]

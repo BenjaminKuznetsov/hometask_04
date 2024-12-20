@@ -5,7 +5,7 @@ import { HttpStatus } from "../../src/common/httpStatus"
 import { mockUsers } from "../helpers/mock-data"
 import { encodeToBase64 } from "../../src/common/helpers"
 import { db } from "../../src/db/mongo"
-import { UserInputModel } from "../../src/features/user/userModels"
+import { UserInputModel } from "../../src/features/user/domain/userModels"
 import { appConfig } from "../../src/common/config/config"
 
 describe("users", () => {

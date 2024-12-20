@@ -1,4 +1,4 @@
-import { UserDocument } from "../../features/user/userModels"
+import { UserDocument } from "../../features/user/domain/userModels"
 import { emailAdapter } from "../adapters/email.adapter"
 import { ResultType } from "../result/result.type"
 import { resultHelpers } from "../result/helpers"
