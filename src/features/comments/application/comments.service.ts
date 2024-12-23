@@ -1,12 +1,18 @@
 import { TCommentInput } from "../domain/comments.model"
 import { ResultType } from "../../../common/result/result.type"
-import { postsRepository } from "../../posts/infra/postsRepository"
+import { PostsRepository } from "../../posts/infra/posts.repo"
 import { resultHelpers } from "../../../common/result/helpers"
-import { commentsRepo } from "../infra/comments.repo"
+import { CommentsRepo } from "../infra/comments.repo"
 
-export const commentsService = {
+export class CommentsService {
+    constructor(
+        private commentsRepo: CommentsRepo,
+        private postsRepository: PostsRepository,
+    ) {
+    }
+
     async createComment(postId: string, userId: string, comment: TCommentInput): Promise<ResultType<string | null>> {
-        const doesPostExist = await postsRepository.doesExistById(postId)
+        const doesPostExist = await this.postsRepository.doesExistById(postId)
 
         if (!doesPostExist) {
             return resultHelpers.notFound()
@@ -19,13 +25,13 @@ export const commentsService = {
             createdAt: new Date().toISOString(),
         }
 
-        const commentId = await commentsRepo.createComment(newComment)
+        const commentId = await this.commentsRepo.createComment(newComment)
 
         return resultHelpers.success(commentId)
-    },
+    }
 
     async editComment(commentId: string, userId: string, input: TCommentInput): Promise<ResultType<true | null>> {
-        const comment = await commentsRepo.getCommentById(commentId)
+        const comment = await this.commentsRepo.getCommentById(commentId)
 
         if (!comment) {
             return resultHelpers.notFound()
@@ -35,13 +41,13 @@ export const commentsService = {
             return resultHelpers.forbidden()
         }
 
-        await commentsRepo.editComment(commentId, input)
+        await this.commentsRepo.editComment(commentId, input)
 
         return resultHelpers.success(true)
-    },
+    }
 
     async deleteComment(commentId: string, userId: string): Promise<ResultType<true | null>> {
-        const comment = await commentsRepo.getCommentById(commentId)
+        const comment = await this.commentsRepo.getCommentById(commentId)
 
         if (!comment) {
             return resultHelpers.notFound()
@@ -51,8 +57,8 @@ export const commentsService = {
             return resultHelpers.forbidden()
         }
 
-        await commentsRepo.deleteComment(commentId)
+        await this.commentsRepo.deleteComment(commentId)
 
         return resultHelpers.success(true)
-    },
+    }
 }

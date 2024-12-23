@@ -19,4 +19,18 @@ export const emailManager = {
 
         return resultHelpers.success(true)
     },
+    userRecoveryPassword(user: UserDocument): ResultType<true> {
+        const emailContent = `<h1>Password recovery</h1>
+            <p>To recover password please follow the link below:
+                <a href='https://somesite.com/recovery-password?code=${user.passwordRecovery!.recoveryCode}'>complete password recovery</a> 
+            </p>`
+
+        emailAdapter.sendEmail({
+            to: user.email,
+            subject: "Password recovery",
+            html: emailContent,
+        })
+
+        return resultHelpers.success(true)
+    },
 }

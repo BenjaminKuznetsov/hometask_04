@@ -1,15 +1,19 @@
 import express, { Request, Response } from "express"
 import { usersService } from "../application/usersService"
-import { ApiErrorType, Paginator, PagingParams, RequestWithBody, RequestWithParams } from "../../../common/types/types"
+import { ApiErrorType, Paginator, RequestWithBody, RequestWithParams } from "../../../common/types/types"
 import { basicAuthMiddleware } from "../../../common/middleware/basic-auth"
-import { userValidators } from "../midleware/userValidators"
 import { HttpStatus } from "../../../common/httpStatus"
 import { handleErrorsMiddleware } from "../../../common/middleware/handleErrors"
-import { isKeyOf, pagingUtil } from "../../../common/helpers"
+import { pagingUtil } from "../../../common/helpers"
 import { usersQueryRepo } from "../infra/usersQueryRepo"
 import { exampleUserDocument, UserInputModel, UserSearchParams, UserViewModel } from "../domain/userModels"
 import { ObjectId } from "mongodb"
 import { resultHelpers } from "../../../common/result/helpers"
+import {
+    emailValidator,
+    registerUserLoginValidator,
+    registerUserPasswordValidator,
+} from "../../../common/middleware/validators"
 
 export const usersRouter = express.Router()
 
@@ -61,7 +65,7 @@ usersRouter.get("/",
 
 usersRouter.post("/",
     basicAuthMiddleware,
-    ...userValidators,
+    registerUserLoginValidator, registerUserPasswordValidator, emailValidator,
     handleErrorsMiddleware,
     usersController.createUser,
 )

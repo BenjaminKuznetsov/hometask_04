@@ -1,19 +1,9 @@
 import { BlogDocument, BlogModel, BlogSearchParams, BlogViewModel } from "../domain/blog.model"
 import { Paginator, PagingParams } from "../../../common/types/types"
 
-function blogMapperToView(blog: BlogDocument): BlogViewModel {
-    return {
-        id: blog._id.toString(),
-        name: blog.name,
-        description: blog.description,
-        websiteUrl: blog.websiteUrl,
-        createdAt: blog.createdAt.toISOString(),
-        isMembership: blog.isMembership,
-    }
-}
+export class BlogsQueryRepo {
 
-export const blogsQueryRepo = {
-    getBlogsWithPagingAndFilter: async (searchParams: BlogSearchParams, pagingParams: PagingParams<BlogViewModel>): Promise<Paginator<BlogViewModel>> => {
+    async getBlogsWithPagingAndFilter(searchParams: BlogSearchParams, pagingParams: PagingParams<BlogViewModel>): Promise<Paginator<BlogViewModel>> {
 
         const filter: Record<string, unknown> = {}
         if (searchParams.searchNameTerm) {
@@ -34,12 +24,26 @@ export const blogsQueryRepo = {
             page: pagingParams.pageNumber,
             pageSize: pagingParams.pageSize,
             totalCount,
-            items: foundBlogs.map(blogMapperToView),
+            items: foundBlogs.map(this.blogMapperToView),
         }
 
-    },
-    getBlogById: async (id: string): Promise<BlogViewModel | null> => {
+    }
+
+    async getBlogById(id: string): Promise<BlogViewModel | null> {
         const foundBlog: BlogDocument | null = await BlogModel.findById(id)
-        return foundBlog ? blogMapperToView(foundBlog) : null
-    },
+        return foundBlog ? this.blogMapperToView(foundBlog) : null
+    }
+
+    private blogMapperToView(blog: BlogDocument): BlogViewModel {
+        return {
+            id: blog._id.toString(),
+            name: blog.name,
+            description: blog.description,
+            websiteUrl: blog.websiteUrl,
+            createdAt: blog.createdAt.toISOString(),
+            isMembership: blog.isMembership,
+        }
+    }
 }
+
+

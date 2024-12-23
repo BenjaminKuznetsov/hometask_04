@@ -39,6 +39,7 @@ export const usersService = {
             email: input.email,
             passwordHash: passwordHash,
             emailConfirmation,
+            passwordRecovery: null,
         }
         const newUserId = await usersRepo.createUser(newUser)
 

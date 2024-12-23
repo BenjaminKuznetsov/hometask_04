@@ -1,11 +1,5 @@
 import { ResultType } from "../../../common/result/result.type"
-import {
-    ConfirmationStatus,
-    TEmailConfirmation,
-    User,
-    UserDocument,
-    UserInputModel,
-} from "../../user/domain/userModels"
+import { ConfirmationStatus, TPasswordRecovery, UserDocument, UserInputModel } from "../../user/domain/userModels"
 import { usersRepo } from "../../user/infra/usersRepo"
 import { resultHelpers } from "../../../common/result/helpers"
 import { bcryptService } from "../../../common/adapters/bcrypt.service"
@@ -63,6 +57,20 @@ export const authService = {
         await sessionsRepo.createSession(newSession)
 
         return resultHelpers.success({ accessToken, refreshToken })
+    },
+
+    async verifyRefreshToken(token: string): Promise<ResultType<RefreshTokenPayload | null>> {
+        const jwtResult = await jwtService.verifyToken(token)
+        if (!resultHelpers.isSuccess(jwtResult)) {
+            return resultHelpers.unauthorized()
+        }
+
+        const doesSessionExists = await sessionsRepo.doesSessionExists(jwtResult.data as RefreshTokenPayload)
+        if (!doesSessionExists) {
+            return resultHelpers.unauthorized()
+        }
+
+        return resultHelpers.success(jwtResult.data as RefreshTokenPayload)
     },
 
     async refreshUserTokens(token: string): Promise<ResultType<TTokenPair | null>> {
@@ -171,9 +179,46 @@ export const authService = {
             minutes: 30,
         })
 
-        await user.save()
+        await usersRepo.save(user)
 
         emailManager.userRegistrationConfirmation(user)
+
+        return resultHelpers.success(true)
+    },
+    async passwordRecovery(email: string): Promise<ResultType<true | null>> {
+        const user: UserDocument | null = await usersRepo.getUserByFilter({ email })
+        if (!user) {
+            return resultHelpers.notFound()
+        }
+
+        const recoveryData: TPasswordRecovery = {
+            recoveryCode: uuidv4(),
+            expirationDate: add(new Date(), {
+                seconds: 5,
+            }),
+        }
+
+        user.passwordRecovery = (recoveryData)
+        await usersRepo.save(user)
+
+        emailManager.userRecoveryPassword(user)
+
+        return resultHelpers.success(true)
+    },
+    async newPassword(recoveryCode: string, newPassword: string): Promise<ResultType<true | null>> {
+        const user = await usersRepo.getUserByRecoveryCode(recoveryCode)
+        if (!user) {
+            return resultHelpers.badRequest({ field: "recoveryCode", message: "Recovery code is not correct" })
+        }
+
+        if (user.passwordRecovery!.expirationDate! < new Date()) {
+            return resultHelpers.badRequest({ field: "recoveryCode", message: "Recovery code is expired" })
+        }
+
+        const passwordHash = await bcryptService.generateHash(newPassword)
+        user.passwordHash = passwordHash
+        user.passwordRecovery = null
+        await usersRepo.save(user)
 
         return resultHelpers.success(true)
     },

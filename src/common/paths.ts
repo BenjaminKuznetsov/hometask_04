@@ -13,6 +13,8 @@ export const paths = {
         logout: "/api/auth/logout",
         registerConfirm: "/api/auth/registration-confirmation",
         registerEmailResend: "/api/auth/registration-email-resending",
+        passwordRecovery: "/api/auth/password-recovery",
+        newPassword: "/api/auth/new-password",
         me: "/api/auth/me",
         subs: {
             login: "/login",
@@ -21,6 +23,8 @@ export const paths = {
             register: "/registration",
             registerConfirm: "/registration-confirmation",
             registerEmailResend: "/registration-email-resending",
+            passwordRecovery: "/password-recovery",
+            newPassword: "/new-password",
             me: "/me",
         },
     },

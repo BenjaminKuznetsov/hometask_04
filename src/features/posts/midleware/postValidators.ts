@@ -1,5 +1,4 @@
 import { body } from "express-validator"
-import { blogsRepository } from "../../blog/infra/blogsRepository"
 
 const titleValidator = body("title")
     .isString()
@@ -25,13 +24,5 @@ const contentValidator = body("content")
 export const blogIdMongoValidator = body("blogId")
     .isMongoId()
     .withMessage("Blog id should be valid mongo id")
-
-export const blogIdValidator = body("blogId").custom(async (blogId) => {
-    const blog = await blogsRepository.getBlogById(blogId)
-    if (!blog) {
-        throw new Error("Blog with such id not found")
-    }
-    return true
-})
 
 export const postValidators = [ titleValidator, shortDescriptionValidator, contentValidator ]

@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express"
-import { blogsRouter } from "./features/blog/api/blogsRouter"
+import { blogsRouter } from "./features/blog/api/blogs.router"
 import { postsRouter } from "./features/posts/api/posts.router"
 import { paths } from "./common/paths"
 import { HttpStatus } from "./common/httpStatus"

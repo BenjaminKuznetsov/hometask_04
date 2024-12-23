@@ -4,15 +4,18 @@ import { handleErrorsMiddleware } from "../../../common/middleware/handleErrors"
 import { RequestWithBody } from "../../../common/types/types"
 import { authService } from "../application/auth.service"
 import { resultHelpers } from "../../../common/result/helpers"
-import { loginOrEmailValidator, passwordValidator } from "../midleware/auth.validators"
 import { AuthInput } from "../domain/auth.types"
 import { usersQueryRepo } from "../../user/infra/usersQueryRepo"
 import { MeViewModel, UserInputModel } from "../../user/domain/userModels"
 import { bearerAuthMiddleware } from "../../../common/middleware/bearer-auth"
 import { paths } from "../../../common/paths"
-import { emailValidator, userValidators } from "../../user/midleware/userValidators"
 import { appConfig } from "../../../common/config/config"
-import { refreshTokenMiddleware } from "../midleware/auth.middlewares"
+import { refreshTokenMiddleware } from "../middleware/auth.middlewares"
+import {
+    emailValidator, loginOrEmailValidator,
+    loginUserPasswordValidator, newPasswordValidator, recoveryCodeValidator,
+    registerUserLoginValidator,
+} from "../../../common/middleware/validators"
 
 export const authRouter = Router()
 
@@ -22,14 +25,14 @@ authRouter
         bearerAuthMiddleware,
         async (req: Request, res: Response<MeViewModel>) => {
 
-            const me = await usersQueryRepo.getMe(req.userId!)
+            const me = await usersQueryRepo.getMe(req.userCtx.userId!)
 
             res.status(HttpStatus.OK).json(me)
         })
 
     .post(paths.auth.subs.login,
         loginOrEmailValidator,
-        passwordValidator,
+        loginUserPasswordValidator,
         handleErrorsMiddleware,
         async (req: RequestWithBody<AuthInput>, res: Response<{ "accessToken": string }>) => {
             const result = await authService.loginUser({
@@ -53,6 +56,30 @@ authRouter
             //     expires: new Date(add(new Date(), { seconds: parseInt(appConfig.refreshTokenExp) })),
             // })
             res.status(HttpStatus.OK).json({ accessToken: result.data.accessToken })
+        })
+
+    .post(paths.auth.subs.passwordRecovery,
+        emailValidator,
+        handleErrorsMiddleware,
+        async (req: RequestWithBody<{ email: string }>, res: Response) => {
+            const email = req.body.email
+            await authService.passwordRecovery(email)
+            res.sendStatus(HttpStatus.NoContent)
+        })
+
+    .post(paths.auth.subs.newPassword,
+        newPasswordValidator,
+        recoveryCodeValidator,
+        handleErrorsMiddleware,
+        async (req: RequestWithBody<{ recoveryCode: string, newPassword: string }>, res: Response) => {
+            const recoveryCode = req.body.recoveryCode
+            const newPassword = req.body.newPassword
+            const result = await authService.newPassword(recoveryCode, newPassword)
+            if (!resultHelpers.isSuccess(result)) {
+                res.status(resultHelpers.resultCodeToHttpException(result.status)).json({ errorsMessages: result.extensions })
+                return
+            }
+            res.sendStatus(HttpStatus.NoContent)
         })
 
     .post(paths.auth.subs.refresh,
@@ -96,7 +123,7 @@ authRouter
         })
 
     .post(paths.auth.subs.register,
-        ...userValidators,
+        registerUserLoginValidator, loginUserPasswordValidator, emailValidator,
         handleErrorsMiddleware,
         async (req: RequestWithBody<UserInputModel>, res: Response) => {
 

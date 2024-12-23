@@ -1,29 +1,32 @@
 import { Request, Response, Router } from "express"
 import { DeviceViewModel } from "../domain/sessions.model"
-import { bearerAuthMiddleware } from "../../../common/middleware/bearer-auth"
 import { sessionsService } from "../application/sessions.service"
 import { HttpStatus } from "../../../common/httpStatus"
 import { resultHelpers } from "../../../common/result/helpers"
+import { authService } from "../../auth/application/auth.service"
 
 export const sessionsRouter = Router()
 
 const checkRefreshTokenMiddleware = async (req: Request, res: Response, next: () => void) => {
     const refreshToken: string = req.cookies.refreshToken
-    //payload = await authService.validateRefreshToken(refreshToken)
-    //req.userContext = {userId: payload.userId, deviceId: string}
     if (!refreshToken) {
         res.sendStatus(HttpStatus.Unauthorized)
         return
     }
+    const result = await authService.verifyRefreshToken(refreshToken)
+    if (!resultHelpers.isSuccess(result)) {
+        res.sendStatus(HttpStatus.Unauthorized)
+        return
+    }
+    req.userCtx = { userId: result.data.userId, deviceId: result.data.deviceId }
     next()
 }
 
 sessionsRouter.get("/",
     checkRefreshTokenMiddleware,
     async (req: Request, res: Response<DeviceViewModel[]>) => {
-        // TODO: переделать
-        //     const userId = req.user.userId
-        const result = await sessionsService.getUserDevices(req.cookies.refreshToken)
+        const { userId } = req.userCtx
+        const result = await sessionsService.getUserDevices(userId!)
         if (!resultHelpers.isSuccess(result)) {
             res.sendStatus(HttpStatus.Unauthorized)
             return
@@ -34,7 +37,8 @@ sessionsRouter.get("/",
     .delete("/",
         checkRefreshTokenMiddleware,
         async (req: Request, res: Response) => {
-            const result = await sessionsService.terminateAllOtherUserSessions(req.cookies.refreshToken)
+            const { userId, deviceId } = req.userCtx
+            const result = await sessionsService.terminateAllOtherUserSessions(userId!, deviceId!)
             if (!resultHelpers.isSuccess(result)) {
                 res.sendStatus(HttpStatus.Unauthorized)
                 return
@@ -45,9 +49,10 @@ sessionsRouter.get("/",
     .delete("/:deviceId",
         checkRefreshTokenMiddleware,
         async (req: Request, res: Response) => {
+            const { userId } = req.userCtx
 
             const deviceId = req.params.deviceId
-            const result = await sessionsService.terminateOneSession(req.cookies.refreshToken, deviceId)
+            const result = await sessionsService.terminateOneSession(userId!, deviceId)
 
             if (!resultHelpers.isSuccess(result)) {
                 res.sendStatus(resultHelpers.resultCodeToHttpException(result.status))

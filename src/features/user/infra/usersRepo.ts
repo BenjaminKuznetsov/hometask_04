@@ -46,9 +46,19 @@ export const usersRepo = {
         })
     },
 
+    async getUserByRecoveryCode(code: string): Promise<UserDocument | null> {
+        return UserModel.findOne({
+            "passwordRecovery.recoveryCode": code,
+        })
+    },
+
     async createUser(newUser: User): Promise<string> {
         const createdUser = await UserModel.create(newUser)
         return createdUser._id.toString()
+    },
+
+    async save(user: UserDocument) {
+        await user.save()
     },
 
     async setUserAsConfirmed(userId: string): Promise<boolean> {

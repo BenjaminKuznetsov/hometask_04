@@ -3,11 +3,7 @@ import { ObjectId } from "mongodb"
 import { usersRepo } from "../../user/infra/usersRepo"
 import { Paginator, PagingParams } from "../../../common/types/types"
 
-export const commentsQueryRepo = {
-    _isValidId: (id: string): boolean => {
-        return ObjectId.isValid(id)
-    },
-
+export class CommentsQueryRepo {
     async getCommentsByPostWithPaging(postId: string, pagingParams: PagingParams<TCommentViewModel>): Promise<Paginator<TCommentViewModel>> {
         if (!this._isValidId(postId)) {
             return {
@@ -51,7 +47,7 @@ export const commentsQueryRepo = {
             totalCount,
             items: mappedComments,
         }
-    },
+    }
 
     async getCommentById(id: string): Promise<TCommentViewModel | null> {
         if (!this._isValidId(id)) {
@@ -75,5 +71,9 @@ export const commentsQueryRepo = {
             },
             createdAt: foundComment.createdAt.toISOString(),
         }
-    },
+    }
+
+    private _isValidId(id: string): boolean {
+        return ObjectId.isValid(id)
+    }
 }

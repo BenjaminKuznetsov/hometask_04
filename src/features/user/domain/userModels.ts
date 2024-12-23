@@ -6,12 +6,18 @@ export type User = {
     email: string
     passwordHash: string
     emailConfirmation: TEmailConfirmation
+    passwordRecovery: TPasswordRecovery | null
 }
 
 export type TEmailConfirmation = {
     confirmationCode?: string // not required if created by admin
     expirationDate?: Date // not required if created by admin
     confirmationStatus: ConfirmationStatus
+}
+
+export type TPasswordRecovery = {
+    recoveryCode: string
+    expirationDate: Date
 }
 
 export enum ConfirmationStatus {
@@ -30,11 +36,19 @@ const emailConfirmationSchema = new Schema<TEmailConfirmation>({
     timestamps: true,
 })
 
+const passwordRecoverySchema = new Schema<TPasswordRecovery>({
+    recoveryCode: { type: String, required: true },
+    expirationDate: { type: Date, required: true },
+}, {
+    timestamps: false,
+})
+
 export const userSchema = new Schema<User>({
     login: { type: String, required: true },
     email: { type: String, required: true },
     passwordHash: { type: String, required: true },
     emailConfirmation: emailConfirmationSchema,
+    passwordRecovery: { type: passwordRecoverySchema, default: null },
 }, {
     timestamps: true,
 })

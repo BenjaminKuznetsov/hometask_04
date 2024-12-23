@@ -3,7 +3,10 @@ import "express"
 declare global {
     namespace Express {
         export interface Request {
-            userId: string | null
+            userCtx: {
+                userId: string | null
+                deviceId?: string
+            }
         }
     }
 }

@@ -27,7 +27,9 @@ export const bearerAuthMiddleware = async (req: Request, res: Response, next: Ne
         return
     }
 
-    req.userId = result.data.userId
+    req.userCtx = {
+        userId: result.data.userId,
+    }
 
     next()
 }
