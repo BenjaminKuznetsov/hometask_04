@@ -11,6 +11,7 @@ import cookieParser from "cookie-parser"
 import { bruteForceGuard } from "./common/middleware/bruteForceGuard"
 import { registrator } from "./common/middleware/registrator"
 import { sessionsRouter } from "./features/sessions/api/sessions.router"
+import { logger } from "./common/middleware/logger"
 
 export const app = express()
 
@@ -18,6 +19,9 @@ app.set("trust proxy", true)
 
 app.use(express.json())
 app.use(cookieParser())
+
+app.use(logger)
+
 app.use(bruteForceGuard)
 app.use(registrator)
 

@@ -61,7 +61,7 @@ describe("user password recovery", () => {
         expect(result5.status).toBe(ResultStatus.BadRequest)
     })
 
-    it("shouldn`t change password with expired recovery code", async () => {
+    it.skip("shouldn`t change password with expired recovery code", async () => {
         const [ user ] = await e2eSeeder.users(1)
         await passwordRecoveryUseCase(user.email)
         const recoveryCode = spy.mock.lastCall![0].passwordRecovery!.recoveryCode

@@ -10,6 +10,7 @@ const endpointsToCheck: string[] = [
     paths.auth.registerConfirm,
     paths.auth.registerEmailResend,
     paths.auth.passwordRecovery,
+    paths.auth.newPassword,
 ]
 
 export const bruteForceGuard = async (req: Request, res: Response, next: NextFunction) => {

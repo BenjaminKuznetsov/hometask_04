@@ -194,7 +194,8 @@ export const authService = {
         const recoveryData: TPasswordRecovery = {
             recoveryCode: uuidv4(),
             expirationDate: add(new Date(), {
-                seconds: 5,
+                hours: 1,
+                minutes: 30,
             }),
         }
 

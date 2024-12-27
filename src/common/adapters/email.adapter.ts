@@ -22,6 +22,7 @@ export const emailAdapter = {
         })
             // .then(info => console.log(info))
             .catch(e => console.error(e))
+        // console.log("Sent email to:", to)
 
         return resultHelpers.success(true)
     },

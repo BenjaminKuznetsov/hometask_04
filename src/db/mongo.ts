@@ -6,9 +6,10 @@ import mongoose from "mongoose"
 export const db = {
     client: {} as any,
 
-    async run() {
+    async run(mode: "dev" | "test" = "dev") {
+        const dbName = mode === "dev" ? appConfig.dbName : appConfig.testDbName
         try {
-            this.client = await mongoose.connect(`${appConfig.mongoUrl}/${appConfig.dbName}`)
+            this.client = await mongoose.connect(`${appConfig.mongoUrl}/${dbName}`)
             console.log(`Connected successfully to "${this.client.connection.db.namespace}" database`)
             return true
         } catch (e: unknown) {

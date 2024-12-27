@@ -7,6 +7,8 @@ import { HttpStatus } from "../../src/common/httpStatus"
 import { appConfig } from "../../src/common/config/config"
 import { BlogViewModel } from "../../src/features/blog/domain/blog.model"
 import { PostInputModel, PostViewModel } from "../../src/features/posts/domain/post.model"
+import { UserInputModel, UserViewModel } from "../../src/features/user/domain/userModels"
+import { AuthInput } from "../../src/features/auth/domain/auth.types"
 
 export type CreatedUser = {
     id: string
@@ -17,7 +19,55 @@ export type CreatedUser = {
     accessToken?: string
 }
 
+export type LoginedUser = {
+    id: string
+    email: string
+    login: string
+    password: string
+    accessToken: string
+}
+
 export const e2eSeeder = {
+    async createAndLoginUser(): Promise<LoginedUser> {
+
+        const userInput: UserInputModel = {
+            email: "example@example.com",
+            login: "login",
+            password: "password",
+        }
+
+        const res1 = await request(app)
+            .post(paths.users)
+            .set("Authorization", `Basic ${encodeToBase64(appConfig.adminAuth)}`)
+            .send(userInput)
+
+        const reqBody: UserViewModel = res1.body
+
+        const authInput: AuthInput = {
+            loginOrEmail: userInput.login,
+            password: userInput.password,
+        }
+
+        const reqs2 = await request(app)
+            .post(paths.auth.login)
+            .send(authInput)
+
+        const accessToken = reqs2.body.accessToken
+
+        const res3 = await request(app)
+            .get(paths.auth.me)
+            .set("Authorization", `Bearer ${accessToken}`)
+            .expect(HttpStatus.OK)
+
+        return {
+            id: reqBody.id,
+            email: reqBody.email,
+            login: reqBody.login,
+            password: userInput.password,
+            accessToken,
+        }
+    },
+
     async users(count: number): Promise<CreatedUser[]> {
         const createdUsers: CreatedUser[] = []
 
