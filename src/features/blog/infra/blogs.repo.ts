@@ -1,6 +1,8 @@
 import { Blog, BlogDocument, BlogInputModel, BlogModel } from "../domain/blog.model"
 import { ObjectId } from "mongodb"
+import { injectable } from "inversify"
 
+@injectable()
 export class BlogsRepository {
     async getBlogById(id: string): Promise<BlogDocument | null> {
         return await BlogModel.findById(id) as BlogDocument

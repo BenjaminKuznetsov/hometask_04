@@ -1,6 +1,8 @@
 import { Post, PostModel } from "../domain/post.model"
 import { ObjectId } from "mongodb"
+import { injectable } from "inversify"
 
+@injectable()
 export class PostsRepository {
     _isValidId(id: string): boolean {
         return ObjectId.isValid(id)

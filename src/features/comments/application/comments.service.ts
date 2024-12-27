@@ -3,11 +3,13 @@ import { ResultType } from "../../../common/result/result.type"
 import { PostsRepository } from "../../posts/infra/posts.repo"
 import { resultHelpers } from "../../../common/result/helpers"
 import { CommentsRepo } from "../infra/comments.repo"
+import { inject, injectable } from "inversify"
 
+@injectable()
 export class CommentsService {
     constructor(
-        private commentsRepo: CommentsRepo,
-        private postsRepository: PostsRepository,
+        @inject(CommentsRepo) private commentsRepo: CommentsRepo,
+        @inject(PostsRepository) private postsRepository: PostsRepository,
     ) {
     }
 

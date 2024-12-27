@@ -16,13 +16,14 @@ import { examplePostDocument, PostInputModel, PostSearchParams, PostViewModel } 
 import { PostsQueryRepo } from "../../posts/infra/posts.queryRepo"
 import { PostsService } from "../../posts/application/posts.service"
 import { resultHelpers } from "../../../common/result/helpers"
+import { inject } from "inversify"
 
 export class BlogsController {
     constructor(
-        private blogsService: BlogsService,
-        private blogsQueryRepo: BlogsQueryRepo,
-        private postsQueryRepo: PostsQueryRepo,
-        private postsService: PostsService,
+        @inject(BlogsService) private blogsService: BlogsService,
+        @inject(BlogsQueryRepo) private blogsQueryRepo: BlogsQueryRepo,
+        @inject(PostsQueryRepo) private postsQueryRepo: PostsQueryRepo,
+        @inject(PostsService) private postsService: PostsService,
     ) {
     }
 

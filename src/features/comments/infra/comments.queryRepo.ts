@@ -2,7 +2,9 @@ import { CommentDocument, CommentModel, TCommentViewModel } from "../domain/comm
 import { ObjectId } from "mongodb"
 import { usersRepo } from "../../user/infra/usersRepo"
 import { Paginator, PagingParams } from "../../../common/types/types"
+import { injectable } from "inversify"
 
+@injectable()
 export class CommentsQueryRepo {
     async getCommentsByPostWithPaging(postId: string, pagingParams: PagingParams<TCommentViewModel>): Promise<Paginator<TCommentViewModel>> {
         if (!this._isValidId(postId)) {

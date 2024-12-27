@@ -3,7 +3,10 @@ import { basicAuthMiddleware } from "../../../common/middleware/basic-auth"
 import { blogValidators, handleNotFoundError } from "../midleware/blogValidators"
 import { handleErrorsMiddleware } from "../../../common/middleware/handleErrors"
 import { postValidators } from "../../posts/midleware/postValidators"
-import { blogsController } from "../../../composition-root"
+import { ioc } from "../../../composition-root"
+import { BlogsController } from "./blogs.controller"
+
+const blogsController = ioc.get(BlogsController)
 
 export const blogsRouter = express.Router()
 

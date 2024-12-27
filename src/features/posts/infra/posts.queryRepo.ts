@@ -1,6 +1,8 @@
 import { PostDocument, PostModel, PostSearchParams, PostViewModel } from "../domain/post.model"
 import { Paginator, PagingParams } from "../../../common/types/types"
+import { injectable } from "inversify"
 
+@injectable()
 export class PostsQueryRepo {
     async getPostsWithPagingAndFilter(searchParams: PostSearchParams, pagingParams: PagingParams<PostViewModel>): Promise<Paginator<PostViewModel>> {
         const filter: Record<string, unknown> = {}

@@ -4,7 +4,10 @@ import { blogIdMongoValidator, postValidators } from "../midleware/postValidator
 import { handleErrorsMiddleware } from "../../../common/middleware/handleErrors"
 import { bearerAuthMiddleware } from "../../../common/middleware/bearer-auth"
 import { commentContentValidator } from "../../comments/midleware/comments.validators"
-import { postsController } from "../../../composition-root"
+import { ioc } from "../../../composition-root"
+import { PostsController } from "./posts.controller"
+
+const postsController = ioc.get(PostsController)
 
 export const postsRouter = express.Router()
 

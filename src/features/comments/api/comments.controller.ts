@@ -5,11 +5,12 @@ import { HttpStatus } from "../../../common/httpStatus"
 import { TCommentInput } from "../domain/comments.model"
 import { CommentsService } from "../application/comments.service"
 import { resultHelpers } from "../../../common/result/helpers"
+import { inject } from "inversify"
 
 export class CommentsController {
     constructor(
-        private commentsService: CommentsService,
-        private commentsQueryRepo: CommentsQueryRepo,
+        @inject(CommentsService) private commentsService: CommentsService,
+        @inject(CommentsQueryRepo) private commentsQueryRepo: CommentsQueryRepo,
     ) {
     }
 

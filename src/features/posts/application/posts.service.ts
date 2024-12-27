@@ -4,9 +4,13 @@ import { ResultType } from "../../../common/result/result.type"
 import { resultHelpers } from "../../../common/result/helpers"
 import { PostsRepository } from "../infra/posts.repo"
 import { BlogsRepository } from "../../blog/infra/blogs.repo"
+import { inject, injectable } from "inversify"
 
+@injectable()
 export class PostsService {
-    constructor(private postsRepository: PostsRepository, private blogsRepository: BlogsRepository) {
+    constructor(
+        @inject(PostsRepository) private postsRepository: PostsRepository,
+        @inject(BlogsRepository) private blogsRepository: BlogsRepository) {
     }
 
     async createPost(input: PostInputModel): Promise<ResultType<string | null>> {

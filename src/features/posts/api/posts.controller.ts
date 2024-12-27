@@ -18,14 +18,15 @@ import { resultHelpers } from "../../../common/result/helpers"
 import { CommentsService } from "../../comments/application/comments.service"
 import { CommentsQueryRepo } from "../../comments/infra/comments.queryRepo"
 import { ResultStatus } from "../../../common/result/result.type"
+import { inject } from "inversify"
 
 export class PostsController {
     constructor(
-        private postsService: PostsService,
-        private postsRepository: PostsRepository,
-        private postsQueryRepo: PostsQueryRepo,
-        private commentsService: CommentsService,
-        private commentsQueryRepo: CommentsQueryRepo,
+        @inject(PostsService) private postsService: PostsService,
+        @inject(PostsRepository) private postsRepository: PostsRepository,
+        @inject(PostsQueryRepo) private postsQueryRepo: PostsQueryRepo,
+        @inject(CommentsService) private commentsService: CommentsService,
+        @inject(CommentsQueryRepo) private commentsQueryRepo: CommentsQueryRepo,
     ) {
     }
 

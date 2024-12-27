@@ -1,6 +1,8 @@
 import { BlogDocument, BlogModel, BlogSearchParams, BlogViewModel } from "../domain/blog.model"
 import { Paginator, PagingParams } from "../../../common/types/types"
+import { injectable } from "inversify"
 
+@injectable()
 export class BlogsQueryRepo {
 
     async getBlogsWithPagingAndFilter(searchParams: BlogSearchParams, pagingParams: PagingParams<BlogViewModel>): Promise<Paginator<BlogViewModel>> {

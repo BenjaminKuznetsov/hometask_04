@@ -1,8 +1,10 @@
-import { Blog, BlogDocument, BlogInputModel, BlogModel } from "../domain/blog.model"
+import { Blog, BlogDocument, BlogInputModel } from "../domain/blog.model"
 import { BlogsRepository } from "../infra/blogs.repo"
+import { inject, injectable } from "inversify"
 
+@injectable()
 export class BlogsService {
-    constructor(private blogsRepository: BlogsRepository) {
+    constructor(@inject(BlogsRepository) private blogsRepository: BlogsRepository) {
     }
 
     async getBlogById(id: string): Promise<BlogDocument | null> {

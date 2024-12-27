@@ -2,7 +2,10 @@ import { Router } from "express"
 import { bearerAuthMiddleware } from "../../../common/middleware/bearer-auth"
 import { commentContentValidator } from "../midleware/comments.validators"
 import { handleErrorsMiddleware } from "../../../common/middleware/handleErrors"
-import { commentsController } from "../../../composition-root"
+import { ioc } from "../../../composition-root"
+import { CommentsController } from "./comments.controller"
+
+const commentsController = ioc.get(CommentsController)
 
 export const commentsRouter = Router()
 
