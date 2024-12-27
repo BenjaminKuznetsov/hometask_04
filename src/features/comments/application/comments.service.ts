@@ -1,9 +1,10 @@
-import { TCommentInput } from "../domain/comments.model"
 import { ResultType } from "../../../common/result/result.type"
 import { PostsRepository } from "../../posts/infra/posts.repo"
 import { resultHelpers } from "../../../common/result/helpers"
 import { CommentsRepo } from "../infra/comments.repo"
 import { inject, injectable } from "inversify"
+import { TCommentInput } from "../api/comments.dto"
+import { CommentModel } from "../domain/comments.model"
 
 @injectable()
 export class CommentsService {
@@ -20,16 +21,15 @@ export class CommentsService {
             return resultHelpers.notFound()
         }
 
-        const newComment = {
+        const newComment = CommentModel.createComment({
             content: comment.content,
             commentatorId: userId,
-            postId: postId,
-            createdAt: new Date().toISOString(),
-        }
+            postId,
+        })
 
-        const commentId = await this.commentsRepo.createComment(newComment)
+        await this.commentsRepo.save(newComment)
 
-        return resultHelpers.success(commentId)
+        return resultHelpers.success(newComment.id)
     }
 
     async editComment(commentId: string, userId: string, input: TCommentInput): Promise<ResultType<true | null>> {

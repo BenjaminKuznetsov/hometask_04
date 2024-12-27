@@ -5,10 +5,10 @@ import { HttpStatus } from "../../src/common/httpStatus"
 import { db } from "../../src/db/mongo"
 import { CreatedUser, e2eSeeder } from "../helpers/seeders"
 import { PostViewModel } from "../../src/features/posts/domain/post.model"
-import { TCommentInput, TCommentViewModel } from "../../src/features/comments/domain/comments.model"
 import { generateText } from "../helpers/utils"
 import { ObjectId } from "mongodb"
 import _ from "lodash"
+import { TCommentInput, TCommentViewModel } from "../../src/features/comments/api/comments.dto"
 
 describe("comments", () => {
 

@@ -12,8 +12,8 @@ export const appConfig = {
     mailService: "Mail.ru",
     mailRuAddress: "benjamin.study@mail.ru",
     mailRuPass: process.env.MAIL_RU_PASS || "mailRuPass",
-    accessTokenExp: "10s",
-    refreshTokenExp: "20s",
+    accessTokenExp: "1h",
+    refreshTokenExp: "1d",
     cookieNames: {
         refreshToken: "refreshToken",
     },

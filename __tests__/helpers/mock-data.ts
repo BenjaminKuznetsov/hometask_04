@@ -1,4 +1,4 @@
-import { TCommentInput } from "../../src/features/comments/domain/comments.model"
+import { TCommentInput } from "../../src/features/comments/api/comments.dto"
 
 export const validBlogs = [
     {

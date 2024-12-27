@@ -1,8 +1,9 @@
-import { CommentDocument, CommentModel, TCommentViewModel } from "../domain/comments.model"
+import { CommentDocument, CommentModel } from "../domain/comments.model"
 import { ObjectId } from "mongodb"
 import { usersRepo } from "../../user/infra/usersRepo"
 import { Paginator, PagingParams } from "../../../common/types/types"
 import { injectable } from "inversify"
+import { TCommentViewModel } from "../api/comments.dto"
 
 @injectable()
 export class CommentsQueryRepo {

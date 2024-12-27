@@ -2,10 +2,11 @@ import { ApiErrorType, RequestWithParams, RequestWithParamsAndBody } from "../..
 import { Response } from "express"
 import { CommentsQueryRepo } from "../infra/comments.queryRepo"
 import { HttpStatus } from "../../../common/httpStatus"
-import { TCommentInput } from "../domain/comments.model"
 import { CommentsService } from "../application/comments.service"
 import { resultHelpers } from "../../../common/result/helpers"
 import { inject } from "inversify"
+import { TCommentInput, TCommentViewModel } from "./comments.dto"
+import { LikeInputDTO } from "../../likes/api/likes.dto"
 
 export class CommentsController {
     constructor(
@@ -14,7 +15,7 @@ export class CommentsController {
     ) {
     }
 
-    async getById(req: RequestWithParams<{ id: string }>, res: Response) {
+    async getById(req: RequestWithParams<{ id: string }>, res: Response<TCommentViewModel>) {
         const id = req.params.id
         const comment = await this.commentsQueryRepo.getCommentById(id)
 
@@ -37,6 +38,15 @@ export class CommentsController {
             res.status(resultHelpers.resultCodeToHttpException(result.status)).json({ errorsMessages: result.extensions })
             return
         }
+
+        res.sendStatus(HttpStatus.NoContent)
+    }
+
+    async handleLike(req: RequestWithParamsAndBody<{ commentId: string }, LikeInputDTO>,
+                     res: Response<ApiErrorType | null>) {
+        const commentId = req.params.commentId
+        const userId = req.userCtx.userId
+        const input = req.body
 
         res.sendStatus(HttpStatus.NoContent)
     }

@@ -12,13 +12,13 @@ import { PostsQueryRepo } from "../infra/posts.queryRepo"
 import { HttpStatus } from "../../../common/httpStatus"
 import { ObjectId } from "mongodb"
 import { PostsService } from "../application/posts.service"
-import { exampleCommentDocument, TCommentViewModel } from "../../comments/domain/comments.model"
 import { PostsRepository } from "../infra/posts.repo"
 import { resultHelpers } from "../../../common/result/helpers"
 import { CommentsService } from "../../comments/application/comments.service"
 import { CommentsQueryRepo } from "../../comments/infra/comments.queryRepo"
 import { ResultStatus } from "../../../common/result/result.type"
 import { inject } from "inversify"
+import { exampleCommentDocument, TCommentViewModel } from "../../comments/api/comments.dto"
 
 export class PostsController {
     constructor(
@@ -121,7 +121,7 @@ export class PostsController {
             return
         }
 
-        const createdComment = await this.commentsQueryRepo.getCommentById(result.data!)
+        const createdComment = await this.commentsQueryRepo.getCommentById(result.data)
         res.status(HttpStatus.Created).json(createdComment!)
     }
 }

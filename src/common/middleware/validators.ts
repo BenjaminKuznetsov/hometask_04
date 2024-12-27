@@ -46,6 +46,11 @@ export const recoveryCodeValidator = body("recoveryCode")
     .isUUID()
     .withMessage("Incorrect recovery code")
 
-
+// likes
+export const likeStatusValidator = body("likeStatus")
+    .isString()
+    .trim()
+    .isIn([ "Like", "Dislike", "None" ])
+    .withMessage("Incorrect like status")
 
 
