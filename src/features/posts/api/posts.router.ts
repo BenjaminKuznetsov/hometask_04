@@ -2,7 +2,7 @@ import express from "express"
 import { basicAuthMiddleware } from "../../../common/middleware/basic-auth"
 import { blogIdMongoValidator, postValidators } from "../midleware/postValidators"
 import { handleErrorsMiddleware } from "../../../common/middleware/handleErrors"
-import { bearerAuthMiddleware } from "../../../common/middleware/bearer-auth"
+import { bearerAuthMiddleware, notStrictBearerAuthMiddleware } from "../../../common/middleware/bearer-auth"
 import { commentContentValidator } from "../../comments/midleware/comments.validators"
 import { ioc } from "../../../composition-root"
 import { PostsController } from "./posts.controller"
@@ -18,6 +18,7 @@ postsRouter
     .get("/:id", postsController.getPostById.bind(postsController))
 
     .get("/:postId/comments",
+        notStrictBearerAuthMiddleware,
         postsController.getComments.bind(postsController),
     )
 

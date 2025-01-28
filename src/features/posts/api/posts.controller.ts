@@ -100,6 +100,7 @@ export class PostsController {
 
     async getComments(req: RequestWithParams<{ postId: string }>, res: Response) {
         const pagingParams = pagingUtil<TCommentViewModel>(req.query, exampleCommentDocument)
+        const userId = req.userCtx.userId
 
         const postDoesntExist = await this.postsRepository.doesExistById(req.params.postId)
         if (!postDoesntExist) {
@@ -107,7 +108,7 @@ export class PostsController {
             return
         }
 
-        const comments = await this.commentsQueryRepo.getCommentsByPostWithPaging(req.params.postId, pagingParams)
+        const comments = await this.commentsQueryRepo.getCommentsByPostWithPaging(req.params.postId, pagingParams, userId)
         res.status(HttpStatus.OK).json(comments)
     }
 
@@ -121,7 +122,7 @@ export class PostsController {
             return
         }
 
-        const createdComment = await this.commentsQueryRepo.getCommentById(result.data)
+        const createdComment = await this.commentsQueryRepo.getCommentById(result.data, userId)
         res.status(HttpStatus.Created).json(createdComment!)
     }
 }

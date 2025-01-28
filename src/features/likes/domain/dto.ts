@@ -1,6 +1,6 @@
 import { LikeStatus } from "./likes.model"
 
-export class CreateLikeDto {
+export class LikeDto {
     constructor(
         public status: LikeStatus,
         public authorId: string,

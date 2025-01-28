@@ -12,7 +12,7 @@ export type Comment = {
 }
 
 interface CommentsMethods {
-    calculateLikesCount(status: LikeStatus, prevStatus: LikeStatus): void
+    calculateLikesCount(status: LikeStatus, prevStatus: LikeStatus | null): void
 }
 
 type CommentStatics = typeof CommentEntity
@@ -44,33 +44,34 @@ class CommentEntity {
         return new CommentModel(dto) as CommentDocument
     }
 
-    calculateLikesCount(status: LikeStatus, prevStatus: LikeStatus) {
-        if (prevStatus === status) {
+    calculateLikesCount(newStatus: LikeStatus, prevStatus: LikeStatus | null) {
+        if (prevStatus === newStatus) {
             return
         }
-        if (prevStatus === LikeStatus.None) {
-            if (status === LikeStatus.Like) {
+
+        if (prevStatus === LikeStatus.None || !prevStatus) {
+            if (newStatus === LikeStatus.Like) {
                 this.likesCount += 1
             }
-            if (status === LikeStatus.Dislike) {
+            if (newStatus === LikeStatus.Dislike) {
                 this.dislikesCount += 1
             }
         }
 
         if (prevStatus === LikeStatus.Like) {
-            if (status === LikeStatus.None) {
+            if (newStatus === LikeStatus.None) {
                 this.likesCount -= 1
             }
-            if (status === LikeStatus.Dislike) {
+            if (newStatus === LikeStatus.Dislike) {
                 this.likesCount -= 1
                 this.dislikesCount += 1
             }
         }
         if (prevStatus === LikeStatus.Dislike) {
-            if (status === LikeStatus.None) {
+            if (newStatus === LikeStatus.None) {
                 this.dislikesCount -= 1
             }
-            if (status === LikeStatus.Like) {
+            if (newStatus === LikeStatus.Like) {
                 this.dislikesCount -= 1
                 this.likesCount += 1
             }

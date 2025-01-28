@@ -17,7 +17,9 @@ export class CommentsController {
 
     async getById(req: RequestWithParams<{ id: string }>, res: Response<TCommentViewModel>) {
         const id = req.params.id
-        const comment = await this.commentsQueryRepo.getCommentById(id)
+        const userId = req.userCtx.userId
+
+        const comment = await this.commentsQueryRepo.getCommentById(id, userId)
 
         if (!comment) {
             res.sendStatus(HttpStatus.NotFound)
@@ -47,6 +49,13 @@ export class CommentsController {
         const commentId = req.params.commentId
         const userId = req.userCtx.userId
         const input = req.body
+
+        const result = await this.commentsService.handleLike(commentId, userId!, input.likeStatus)
+
+        if (!resultHelpers.isSuccess(result)) {
+            res.sendStatus(resultHelpers.resultCodeToHttpException(result.status))
+            return
+        }
 
         res.sendStatus(HttpStatus.NoContent)
     }

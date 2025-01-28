@@ -1,6 +1,6 @@
 import { HydratedDocument, Model, model, Schema } from "mongoose"
 import { Timestamps } from "../../../common/types/types"
-import { CreateLikeDto } from "./dto"
+import { LikeDto } from "./dto"
 
 export enum LikeStatus {
     Like = "Like",
@@ -15,7 +15,7 @@ type Like = {
 }
 
 interface LikeMethods {
-
+    updateLikeStatus(newStatus: LikeStatus): void
 }
 
 type LikeStatics = typeof LikeEntity
@@ -39,11 +39,15 @@ class LikeEntity {
         public parentId: string,
     ) { }
 
-    static createLike(dto: CreateLikeDto): LikeDocument {
+    static createLike(dto: LikeDto): LikeDocument {
         return new LikeModel(dto) as LikeDocument
+    }
+
+    updateLikeStatus(newStatus: LikeStatus): void {
+        this.status = newStatus
     }
 }
 
 likesSchema.loadClass(LikeEntity)
 
-const LikeModel = model<Like, LikeModel>("likes", likesSchema)
+export const LikeModel = model<Like, LikeModel>("likes", likesSchema)

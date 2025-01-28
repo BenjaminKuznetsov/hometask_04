@@ -5,12 +5,16 @@ import { CommentsRepo } from "../infra/comments.repo"
 import { inject, injectable } from "inversify"
 import { TCommentInput } from "../api/comments.dto"
 import { CommentModel } from "../domain/comments.model"
+import { LikeDto } from "../../likes/domain/dto"
+import { LikeStatus } from "../../likes/domain/likes.model"
+import { LikesService } from "../../likes/application/likes.service"
 
 @injectable()
 export class CommentsService {
     constructor(
         @inject(CommentsRepo) private commentsRepo: CommentsRepo,
         @inject(PostsRepository) private postsRepository: PostsRepository,
+        @inject(LikesService) private likesService: LikesService,
     ) {
     }
 
@@ -60,6 +64,22 @@ export class CommentsService {
         }
 
         await this.commentsRepo.deleteComment(commentId)
+
+        return resultHelpers.success(true)
+    }
+
+    async handleLike(commentId: string, userId: string, likeStatus: LikeStatus): Promise<ResultType<true | null>> {
+        const comment = await this.commentsRepo.getCommentById(commentId)
+
+        if (!comment) {
+            return resultHelpers.notFound()
+        }
+
+        const likeDto = new LikeDto(likeStatus, userId, commentId)
+        const result = await this.likesService.createOrUpdateLike(likeDto)
+
+        comment.calculateLikesCount(likeStatus, result.data.prevStatus)
+        await this.commentsRepo.save(comment)
 
         return resultHelpers.success(true)
     }

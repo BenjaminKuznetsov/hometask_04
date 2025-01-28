@@ -1,5 +1,5 @@
 import { Router } from "express"
-import { bearerAuthMiddleware } from "../../../common/middleware/bearer-auth"
+import { bearerAuthMiddleware, notStrictBearerAuthMiddleware } from "../../../common/middleware/bearer-auth"
 import { commentContentValidator } from "../midleware/comments.validators"
 import { handleErrorsMiddleware } from "../../../common/middleware/handleErrors"
 import { ioc } from "../../../composition-root"
@@ -12,7 +12,7 @@ export const commentsRouter = Router()
 
 commentsRouter
 
-    .get("/:id", commentsController.getById.bind(commentsController))
+    .get("/:id", notStrictBearerAuthMiddleware, commentsController.getById.bind(commentsController))
 
     .put("/:id",
         bearerAuthMiddleware,

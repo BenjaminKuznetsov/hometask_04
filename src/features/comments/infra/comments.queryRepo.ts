@@ -2,12 +2,43 @@ import { CommentDocument, CommentModel } from "../domain/comments.model"
 import { ObjectId } from "mongodb"
 import { usersRepo } from "../../user/infra/usersRepo"
 import { Paginator, PagingParams } from "../../../common/types/types"
-import { injectable } from "inversify"
+import { inject, injectable } from "inversify"
 import { TCommentViewModel } from "../api/comments.dto"
+import { LikeStatus } from "../../likes/domain/likes.model"
+import { LikesRepo } from "../../likes/infra/likes.repo"
+
+type LikesInfo = {
+    likesCount: number,
+    dislikesCount: number,
+    myStatus: LikeStatus
+}
 
 @injectable()
 export class CommentsQueryRepo {
-    async getCommentsByPostWithPaging(postId: string, pagingParams: PagingParams<TCommentViewModel>): Promise<Paginator<TCommentViewModel>> {
+    constructor(
+        @inject(LikesRepo) private likesRepo: LikesRepo,
+    ) {}
+
+    async _getLikesInfo(commentId: string, userId: string | null): Promise<LikesInfo> {
+        const likesCount = await this.likesRepo.getCountByParentId(commentId, LikeStatus.Like)
+        const dislikesCount = await this.likesRepo.getCountByParentId(commentId, LikeStatus.Dislike)
+        let userStatus: LikeStatus
+
+        if (!userId) {
+            userStatus = LikeStatus.None
+        } else {
+            const like = await this.likesRepo.getLikeByMetadata(commentId, userId)
+            if (!like) {
+                userStatus = LikeStatus.None
+            } else {
+                userStatus = like.status
+            }
+        }
+
+        return { likesCount, dislikesCount, myStatus: userStatus }
+    }
+
+    async getCommentsByPostWithPaging(postId: string, pagingParams: PagingParams<TCommentViewModel>, userId: string | null): Promise<Paginator<TCommentViewModel>> {
         if (!this._isValidId(postId)) {
             return {
                 pagesCount: 0,
@@ -28,16 +59,18 @@ export class CommentsQueryRepo {
         const mappedComments: TCommentViewModel[] = []
 
         for (const comment of comments) {
-            const user = await usersRepo.getUserById(comment.commentatorId)
+            const commentator = await usersRepo.getUserById(comment.commentatorId)
+            const likesInfo = await this._getLikesInfo(comment.id, userId)
 
             mappedComments.push({
                 id: comment._id.toString(),
                 content: comment.content,
                 commentatorInfo: {
-                    userId: user!.id,
-                    userLogin: user!.login,
+                    userId: commentator!.id,
+                    userLogin: commentator!.login,
                 },
                 createdAt: comment.createdAt.toISOString(),
+                likesInfo,
             })
         }
 
@@ -52,27 +85,30 @@ export class CommentsQueryRepo {
         }
     }
 
-    async getCommentById(id: string): Promise<TCommentViewModel | null> {
-        if (!this._isValidId(id)) {
+    async getCommentById(commentId: string, userId: string | null): Promise<TCommentViewModel | null> {
+        if (!this._isValidId(commentId)) {
             return null
         }
-        const _id = new ObjectId(id)
+        const _id = new ObjectId(commentId)
         const foundComment: CommentDocument | null = await CommentModel.findOne({ _id })
 
         if (!foundComment) {
             return null
         }
 
-        const user = await usersRepo.getUserById(foundComment.commentatorId)
+        const commentator = await usersRepo.getUserById(foundComment.commentatorId)
+
+        const likesInfo = await this._getLikesInfo(commentId, userId)
 
         return {
             id: foundComment._id.toString(),
             content: foundComment.content,
             commentatorInfo: {
-                userId: user!.id,
-                userLogin: user!.login,
+                userId: commentator!.id,
+                userLogin: commentator!.login,
             },
             createdAt: foundComment.createdAt.toISOString(),
+            likesInfo,
         }
     }
 
