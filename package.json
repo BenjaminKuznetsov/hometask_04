@@ -5,6 +5,8 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "concurrently \"tsc -w\" \"nodemon dist/index.js\"",
+    "start": "node dist/index.js",
+    "build": "tsc",
     "watch": "tsc -w",
     "test": "jest --runInBand --detectOpenHandles",
     "serveo": "ssh -R 80:localhost:3000 serveo.net",
