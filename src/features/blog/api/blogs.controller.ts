@@ -73,7 +73,7 @@ export class BlogsController {
 
         const pagingParams = pagingUtil<PostViewModel>(req.query, examplePostDocument)
 
-        const result = await this.postsQueryRepo.getPostsWithPagingAndFilter(searchParams, pagingParams)
+        const result = await this.postsQueryRepo.getPostsWithPagingAndFilter(searchParams, pagingParams, req.userCtx.userId)
         res.status(HttpStatus.OK).json(result)
     }
 
@@ -94,7 +94,7 @@ export class BlogsController {
             res.status(resultHelpers.resultCodeToHttpException(result.status)).json({ errorsMessages: result.extensions })
             return
         }
-        const createdPost = await this.postsQueryRepo.getPostById(result.data)
+        const createdPost = await this.postsQueryRepo.getPostById(result.data, req.userCtx.userId)
         res.status(HttpStatus.Created).json(createdPost!)
 
     }

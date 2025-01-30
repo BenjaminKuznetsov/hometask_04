@@ -6,6 +6,7 @@ import { bearerAuthMiddleware, notStrictBearerAuthMiddleware } from "../../../co
 import { commentContentValidator } from "../../comments/midleware/comments.validators"
 import { ioc } from "../../../composition-root"
 import { PostsController } from "./posts.controller"
+import { likeStatusValidator } from "../../../common/middleware/validators"
 
 const postsController = ioc.get(PostsController)
 
@@ -13,21 +14,7 @@ export const postsRouter = express.Router()
 
 postsRouter
 
-    .get("/", postsController.getPosts.bind(postsController))
-
-    .get("/:id", postsController.getPostById.bind(postsController))
-
-    .get("/:postId/comments",
-        notStrictBearerAuthMiddleware,
-        postsController.getComments.bind(postsController),
-    )
-
-    .post("/:postId/comments",
-        bearerAuthMiddleware,
-        commentContentValidator,
-        handleErrorsMiddleware,
-        postsController.createComment.bind(postsController),
-    )
+    .get("/", notStrictBearerAuthMiddleware, postsController.getPosts.bind(postsController))
 
     .post("/",
         basicAuthMiddleware,
@@ -37,6 +24,8 @@ postsRouter
         handleErrorsMiddleware,
         postsController.createPost.bind(postsController),
     )
+
+    .get("/:id", notStrictBearerAuthMiddleware, postsController.getPostById.bind(postsController))
 
     .put("/:id",
         basicAuthMiddleware,
@@ -51,3 +40,25 @@ postsRouter
         basicAuthMiddleware,
         postsController.deletePost.bind(postsController),
     )
+
+    .get("/:postId/comments",
+        notStrictBearerAuthMiddleware,
+        postsController.getComments.bind(postsController),
+    )
+
+    .post("/:postId/comments",
+        bearerAuthMiddleware,
+        commentContentValidator,
+        handleErrorsMiddleware,
+        postsController.createComment.bind(postsController),
+    )
+
+    .put("/:postId/like-status",
+        bearerAuthMiddleware,
+        likeStatusValidator,
+        handleErrorsMiddleware,
+        postsController.handleLike.bind(postsController),
+    )
+
+
+

@@ -5,12 +5,17 @@ import { resultHelpers } from "../../../common/result/helpers"
 import { PostsRepository } from "../infra/posts.repo"
 import { BlogsRepository } from "../../blog/infra/blogs.repo"
 import { inject, injectable } from "inversify"
+import { LikeStatus } from "../../likes/domain/likes.model"
+import { LikeDto } from "../../likes/domain/dto"
+import { LikesService } from "../../likes/application/likes.service"
 
 @injectable()
 export class PostsService {
     constructor(
         @inject(PostsRepository) private postsRepository: PostsRepository,
-        @inject(BlogsRepository) private blogsRepository: BlogsRepository) {
+        @inject(BlogsRepository) private blogsRepository: BlogsRepository,
+        @inject(LikesService) private likesService: LikesService,
+    ) {
     }
 
     async createPost(input: PostInputModel): Promise<ResultType<string | null>> {
@@ -26,6 +31,8 @@ export class PostsService {
             content: input.content,
             blogId: input.blogId,
             blogName: blog.name,
+            likesCount: 0,
+            dislikesCount: 0,
         }
         const createdPostId = await this.postsRepository.createPost(newPost)
         return resultHelpers.success(createdPostId)
@@ -57,5 +64,21 @@ export class PostsService {
 
     async deletePost(id: string): Promise<boolean> {
         return await this.postsRepository.deletePost(id)
+    }
+
+    async handleLike(postId: string, userId: string, likeStatus: LikeStatus): Promise<ResultType<true | null>> {
+        const post = await this.postsRepository.getPostById(postId)
+
+        if (!post) {
+            return resultHelpers.notFound()
+        }
+
+        const likeDto = new LikeDto(likeStatus, userId, postId)
+        const result = await this.likesService.createOrUpdateLike(likeDto)
+
+        post.calculateLikesCount(likeStatus, result.data.prevStatus)
+        await post.save()
+
+        return resultHelpers.success(true)
     }
 }

@@ -1,4 +1,4 @@
-import { Post, PostModel } from "../domain/post.model"
+import { Post, PostDocument, PostModel } from "../domain/post.model"
 import { ObjectId } from "mongodb"
 import { injectable } from "inversify"
 
@@ -32,5 +32,9 @@ export class PostsRepository {
         const _id = new ObjectId(id)
         const foundPost = await PostModel.findOne({ _id })
         return !!foundPost
+    }
+
+    async getPostById(postId: string): Promise<PostDocument | null> {
+        return PostModel.findById(postId)
     }
 }

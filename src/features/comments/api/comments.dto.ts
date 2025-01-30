@@ -11,11 +11,13 @@ export type TCommentViewModel = {
         userLogin: string
     }
     createdAt: string
-    likesInfo: {
-        likesCount: number
-        dislikesCount: number
-        myStatus: LikeStatus
-    }
+    likesInfo: LikesInfo
+}
+
+export type LikesInfo = {
+    likesCount: number,
+    dislikesCount: number,
+    myStatus: LikeStatus
 }
 
 export const exampleCommentDocument = {

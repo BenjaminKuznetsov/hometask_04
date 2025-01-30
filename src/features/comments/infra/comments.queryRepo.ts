@@ -3,40 +3,15 @@ import { ObjectId } from "mongodb"
 import { usersRepo } from "../../user/infra/usersRepo"
 import { Paginator, PagingParams } from "../../../common/types/types"
 import { inject, injectable } from "inversify"
-import { TCommentViewModel } from "../api/comments.dto"
+import { LikesInfo, TCommentViewModel } from "../api/comments.dto"
 import { LikeStatus } from "../../likes/domain/likes.model"
 import { LikesRepo } from "../../likes/infra/likes.repo"
-
-type LikesInfo = {
-    likesCount: number,
-    dislikesCount: number,
-    myStatus: LikeStatus
-}
 
 @injectable()
 export class CommentsQueryRepo {
     constructor(
         @inject(LikesRepo) private likesRepo: LikesRepo,
     ) {}
-
-    async _getLikesInfo(commentId: string, userId: string | null): Promise<LikesInfo> {
-        const likesCount = await this.likesRepo.getCountByParentId(commentId, LikeStatus.Like)
-        const dislikesCount = await this.likesRepo.getCountByParentId(commentId, LikeStatus.Dislike)
-        let userStatus: LikeStatus
-
-        if (!userId) {
-            userStatus = LikeStatus.None
-        } else {
-            const like = await this.likesRepo.getLikeByMetadata(commentId, userId)
-            if (!like) {
-                userStatus = LikeStatus.None
-            } else {
-                userStatus = like.status
-            }
-        }
-
-        return { likesCount, dislikesCount, myStatus: userStatus }
-    }
 
     async getCommentsByPostWithPaging(postId: string, pagingParams: PagingParams<TCommentViewModel>, userId: string | null): Promise<Paginator<TCommentViewModel>> {
         if (!this._isValidId(postId)) {
@@ -110,6 +85,25 @@ export class CommentsQueryRepo {
             createdAt: foundComment.createdAt.toISOString(),
             likesInfo,
         }
+    }
+
+    private async _getLikesInfo(commentId: string, userId: string | null): Promise<LikesInfo> {
+        const likesCount = await this.likesRepo.getCountByParentId(commentId, LikeStatus.Like)
+        const dislikesCount = await this.likesRepo.getCountByParentId(commentId, LikeStatus.Dislike)
+        let userStatus: LikeStatus
+
+        if (!userId) {
+            userStatus = LikeStatus.None
+        } else {
+            const like = await this.likesRepo.getLikeByMetadata(commentId, userId)
+            if (!like) {
+                userStatus = LikeStatus.None
+            } else {
+                userStatus = like.status
+            }
+        }
+
+        return { likesCount, dislikesCount, myStatus: userStatus }
     }
 
     private _isValidId(id: string): boolean {

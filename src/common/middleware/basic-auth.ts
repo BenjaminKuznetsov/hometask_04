@@ -16,5 +16,8 @@ export const basicAuthMiddleware = (req: Request, res: Response, next: NextFunct
         res.sendStatus(HttpStatus.Unauthorized)
         return
     }
+    req.userCtx = {
+        userId: null,
+    }
     next()
 }

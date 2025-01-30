@@ -19,6 +19,7 @@ import { CommentsQueryRepo } from "../../comments/infra/comments.queryRepo"
 import { ResultStatus } from "../../../common/result/result.type"
 import { inject } from "inversify"
 import { exampleCommentDocument, TCommentViewModel } from "../../comments/api/comments.dto"
+import { LikeInputDTO } from "../../likes/api/likes.dto"
 
 export class PostsController {
     constructor(
@@ -34,7 +35,7 @@ export class PostsController {
 
         const pagingParams = pagingUtil<PostViewModel>(req.query, examplePostDocument)
 
-        const result = await this.postsQueryRepo.getPostsWithPagingAndFilter({}, pagingParams)
+        const result = await this.postsQueryRepo.getPostsWithPagingAndFilter({}, pagingParams, req.userCtx.userId)
         res.status(HttpStatus.OK).json(result)
     }
 
@@ -44,7 +45,7 @@ export class PostsController {
             return
         }
 
-        const foundPost = await this.postsQueryRepo.getPostById(req.params.id)
+        const foundPost = await this.postsQueryRepo.getPostById(req.params.id, req.userCtx.userId)
         if (!foundPost) {
             res.sendStatus(HttpStatus.NotFound)
         } else {
@@ -66,7 +67,7 @@ export class PostsController {
             return
         }
 
-        const createdPost = await this.postsQueryRepo.getPostById(result.data)
+        const createdPost = await this.postsQueryRepo.getPostById(result.data, req.userCtx.userId)
         res.status(HttpStatus.Created).json(createdPost!)
     }
 
@@ -125,4 +126,21 @@ export class PostsController {
         const createdComment = await this.commentsQueryRepo.getCommentById(result.data, userId)
         res.status(HttpStatus.Created).json(createdComment!)
     }
+
+    async handleLike(req: RequestWithParamsAndBody<{ postId: string }, LikeInputDTO>,
+                     res: Response<ApiErrorType | null>) {
+        const postId = req.params.postId
+        const userId = req.userCtx.userId
+        const input = req.body
+
+        const result = await this.postsService.handleLike(postId, userId!, input.likeStatus)
+
+        if (!resultHelpers.isSuccess(result)) {
+            res.sendStatus(resultHelpers.resultCodeToHttpException(result.status))
+            return
+        }
+
+        res.sendStatus(HttpStatus.NoContent)
+    }
+
 }

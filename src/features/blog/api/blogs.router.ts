@@ -5,6 +5,7 @@ import { handleErrorsMiddleware } from "../../../common/middleware/handleErrors"
 import { postValidators } from "../../posts/midleware/postValidators"
 import { ioc } from "../../../composition-root"
 import { BlogsController } from "./blogs.controller"
+import { notStrictBearerAuthMiddleware } from "../../../common/middleware/bearer-auth"
 
 const blogsController = ioc.get(BlogsController)
 
@@ -16,6 +17,7 @@ blogsRouter
     .get("/:id", blogsController.getBlogById.bind(blogsController))
 
     .get("/:blogId/posts/",
+        notStrictBearerAuthMiddleware,
         handleNotFoundError,
         blogsController.getPostsByBlogId.bind(blogsController),
     )

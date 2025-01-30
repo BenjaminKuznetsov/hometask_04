@@ -21,13 +21,13 @@ commentsRouter
         commentsController.updateById.bind(commentsController),
     )
 
+    .delete("/:id",
+        bearerAuthMiddleware,
+        commentsController.deleteById.bind(commentsController),
+    )
+
     .put("/:commentId/like-status",
         bearerAuthMiddleware,
         likeStatusValidator,
         handleErrorsMiddleware,
         commentsController.handleLike.bind(commentsController))
-
-    .delete("/:id",
-        bearerAuthMiddleware,
-        commentsController.deleteById.bind(commentsController),
-    )
