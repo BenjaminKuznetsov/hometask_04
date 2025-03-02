@@ -2,11 +2,7 @@ import request from "supertest"
 import { app } from "../../src/app"
 import { paths } from "../../src/common/paths"
 import { HttpStatus } from "../../src/common/httpStatus"
-import { mockUsers } from "../helpers/mock-data"
-import { encodeToBase64 } from "../../src/common/helpers"
 import { db } from "../../src/db/mongo"
-import { UserInputModel } from "../../src/features/user/domain/userModels"
-import { appConfig } from "../../src/common/config/config"
 import { e2eSeeder } from "../helpers/seeders"
 
 describe("users recovery password", () => {
