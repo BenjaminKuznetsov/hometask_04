@@ -45,7 +45,7 @@ export class CommentsController {
     }
 
     async handleLike(req: RequestWithParamsAndBody<{ commentId: string }, LikeInputDTO>,
-                     res: Response<ApiErrorType | null>) {
+        res: Response<ApiErrorType | null>) {
         const commentId = req.params.commentId
         const userId = req.userCtx.userId
         const input = req.body

@@ -11,7 +11,7 @@ import { LikesRepo } from "../../likes/infra/likes.repo"
 export class CommentsQueryRepo {
     constructor(
         @inject(LikesRepo) private likesRepo: LikesRepo,
-    ) {}
+    ) { }
 
     async getCommentsByPostWithPaging(postId: string, pagingParams: PagingParams<TCommentViewModel>, userId: string | null): Promise<Paginator<TCommentViewModel>> {
         if (!this._isValidId(postId)) {
@@ -88,8 +88,8 @@ export class CommentsQueryRepo {
     }
 
     private async _getLikesInfo(commentId: string, userId: string | null): Promise<LikesInfo> {
-        const likesCount = await this.likesRepo.getCountByParentId(commentId, LikeStatus.Like)
-        const dislikesCount = await this.likesRepo.getCountByParentId(commentId, LikeStatus.Dislike)
+        const likesCount = await this.likesRepo.getCountByParentId(commentId, LikeStatus.Like) // Это избыточно, потому что эта инфа уже есть в комменте
+        const dislikesCount = await this.likesRepo.getCountByParentId(commentId, LikeStatus.Dislike)  // Это избыточно, потому что эта инфа уже есть в комменте
         let userStatus: LikeStatus
 
         if (!userId) {
